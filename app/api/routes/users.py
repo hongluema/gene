@@ -36,14 +36,10 @@ def list_users():
 
 
 @router.post("/", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-def create_user(payload: UserCreate):
+def create_user(payload: UserCreate, db: Session = Depends(get_db)):
     # 不实际写库，直接回显一个固定 ID 的用户
-    return {
-        "id": 999,
-        "mobile": payload.mobile,
-        "nickname": payload.nickname,
-        "created_at": datetime.now(timezone.utc),
-    }
+    db_user = crud_user.create_user(db, user=payload)
+    return db_user
 
 
 @router.get("/{user_id}", response_model=UserRead)

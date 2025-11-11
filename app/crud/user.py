@@ -1,13 +1,15 @@
 from sqlalchemy.orm import Session
 from app.models.user import User
 from app.schemas.user import UserCreate  # 后面会定义 Pydantic 模型
+from datetime import datetime
 
 # 创建用户
 def create_user(db: Session, user: UserCreate):
     db_user = User(
         nickname=user.nickname,
         mobile=user.mobile,
-        avatar=user.avatar
+        avatar=user.avatar,
+        created_at=datetime.now()
     )
     db.add(db_user)
     db.commit()  # 提交事务
