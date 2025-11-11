@@ -1,56 +1,75 @@
-from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from app.crud import user as crud_user
-from app.db.base import SessionLocal
-from app.schemas.user import UserCreate, UserRead
 
-# 依赖项：获取数据库会话（每次请求创建一个会话，结束后关闭）
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+from app.api.deps import get_db
+from app.models import User
+from app.schemas.user import UserCreate, UserRead, UserUpdate
+from app.crud import user as crud_user
+
 
 router = APIRouter()
 
+
 @router.get("/", response_model=list[UserRead])
-def list_users():
-    # 固定返回示例数据
-    now = datetime(2024, 1, 1, tzinfo=timezone.utc)
-    return [
-        {
-            "id": 2,
-            "mobile": "18212312312",
-            "nickname": "Alice",
-            "created_at": now,
-        },
-        {
-            "id": 1,
-            "mobile": "18212312312",
-            "nickname": "Bob",
-            "created_at": now,
-        },
-    ]
+def list_users(
+    db: Session = Depends(get_db),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+):
+    stmt = select(User).order_by(User.id.desc()).offset(skip).limit(limit)
+    return list(db.scalars(stmt))
 
 
 @router.post("/", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 def create_user(payload: UserCreate, db: Session = Depends(get_db)):
-    # 不实际写库，直接回显一个固定 ID 的用户
-    db_user = crud_user.create_user(db, user=payload)
-    return db_user
+    user = crud_user.create_user(db, user=payload)
+    db.add(user)
+    try:
+        db.commit()
+        db.refresh(user)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Mobile already exists")
+    return user
 
 
 @router.get("/{user_id}", response_model=UserRead)
 def get_user(user_id: int, db: Session = Depends(get_db)):
-    db_user = crud_user.get_user(db, user_id=user_id)
-    # 固定返回，如果需要，可根据 ID 变化填充不同数据
-    if db_user is None:
+    user = crud_user.get_user(db, user_id=user_id)
+    if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return {
-        "id": db_user.id,
-        "mobile": db_user.mobile,
-        "nickname": db_user.nickname,
-        "created_at": db_user.created_at,
-    }
+    return user
+
+
+@router.patch("/{user_id}", response_model=UserRead)
+def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db)):
+    user = crud_user.get_user(db, user_id=user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if payload.mobile is not None:
+        user.mobile = payload.mobile
+    if payload.avatar is not None:
+        user.avatar = payload.avatar
+    if payload.nickname is not None:
+        user.nickname = payload.nickname
+
+    try:
+        db.commit()
+        db.refresh(user)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Mobile already exists")
+    return user
+
+
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    user = crud_user.get_user(db, user_id=user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.delete(user)
+    db.commit()
+    return None

@@ -1,9 +1,10 @@
-from typing import Generator
-from sqlalchemy.orm import Session
-
-from app.db.session import get_db
+# 依赖项：获取数据库会话（每次请求创建一个会话，结束后关闭）
+from app.db.base import SessionLocal
 
 
-def db_session() -> Generator[Session, None, None]:
-    yield from get_db()
-
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

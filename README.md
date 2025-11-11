@@ -110,13 +110,13 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```bash
 curl -X POST "http://127.0.0.1:8000/users/" \
   -H "Content-Type: application/json" \
-  -d '{"email": "test@example.com", "full_name": "Tester"}'
+  -d '{"mobile": "18200000000", "nickname": "Tester", "avatar": ""}'
 ```
 
-- 查询用户列表（最多 100 条，按 id 倒序）
+- 查询用户列表（支持分页：skip, limit<=100，按 id 倒序）
 
 ```bash
-curl "http://127.0.0.1:8000/users/"
+curl "http://127.0.0.1:8000/users/?skip=0&limit=20"
 ```
 
 - 查询用户详情
@@ -130,8 +130,8 @@ curl "http://127.0.0.1:8000/users/1"
 ```json
 {
   "id": 1,
-  "email": "test@example.com",
-  "full_name": "Tester",
+  "mobile": "18200000000",
+  "nickname": "Tester",
   "created_at": "2024-01-01T00:00:00Z"
 }
 ```

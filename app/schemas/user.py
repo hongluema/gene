@@ -1,15 +1,21 @@
 from datetime import datetime
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 
 class UserBase(BaseModel):
     mobile: str
-    avatar: str | None = None
-    nickname: str
+    avatar: str | None = ""
+    nickname: str | None = ""
 
 
 class UserCreate(UserBase):
     pass
+
+
+class UserUpdate(BaseModel):
+    mobile: str | None = None
+    avatar: str | None = None
+    nickname: str | None = None
 
 
 class UserRead(UserBase):
@@ -17,4 +23,4 @@ class UserRead(UserBase):
     created_at: datetime
 
     class Config:
-        from_attributes = True  # 允许直接从 ORM 模型实例转换
+        from_attributes = True
