@@ -2,6 +2,9 @@ from functools import lru_cache
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# 微信小程序配置（jscode2session）
+WX_APPID="wx2c0cc3d42e2f2046"
+WX_SECRET="7f8e1d51fb5b0349030b7619d5bd8f6d"
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
@@ -20,6 +23,12 @@ class Settings(BaseSettings):
 
     # Database (可为空，便于无 DB 启动)
     DATABASE_URL: str | None = None
+
+    # WeChat Mini Program
+    WX_APPID: str | None = WX_APPID
+    WX_SECRET: str | None = WX_SECRET
+    WX_JSCODE2SESSION_URL: str = "https://api.weixin.qq.com/sns/jscode2session"
+    WX_GRANT_TYPE: str = "authorization_code"
 
     def _normalize_cors(self) -> list[str]:
         if isinstance(self.CORS_ORIGINS, list):
