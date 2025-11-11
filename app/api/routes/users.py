@@ -14,14 +14,14 @@ def list_users():
     return [
         {
             "id": 2,
-            "email": "alice@example.com",
-            "full_name": "Alice",
+            "mobile": "18212312312",
+            "nickname": "Alice",
             "created_at": now,
         },
         {
             "id": 1,
-            "email": "bob@example.com",
-            "full_name": "Bob",
+            "mobile": "18212312312",
+            "nickname": "Bob",
             "created_at": now,
         },
     ]
@@ -32,8 +32,8 @@ def create_user(payload: UserCreate):
     # 不实际写库，直接回显一个固定 ID 的用户
     return {
         "id": 999,
-        "email": payload.email,
-        "full_name": payload.full_name,
+        "mobile": payload.mobile,
+        "nickname": payload.nickname,
         "created_at": datetime.now(timezone.utc),
     }
 
@@ -45,7 +45,7 @@ def get_user(user_id: int):
         raise HTTPException(status_code=404, detail="User not found")
     return {
         "id": user_id,
-        "email": "demo@example.com",
-        "full_name": "Demo User",
+        "mobile": "18212312312",
+        "nickname": "Demo User",
         "created_at": datetime(2024, 1, 1, tzinfo=timezone.utc),
     }

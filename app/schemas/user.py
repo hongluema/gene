@@ -3,8 +3,9 @@ from pydantic import BaseModel, EmailStr
 
 
 class UserBase(BaseModel):
-    email: EmailStr
-    full_name: str | None = None
+    mobile: str
+    avatar: str | None = None
+    nickname: str
 
 
 class UserCreate(UserBase):
@@ -16,5 +17,4 @@ class UserRead(UserBase):
     created_at: datetime
 
     class Config:
-        from_attributes = True
-
+        from_attributes = True  # 允许直接从 ORM 模型实例转换
