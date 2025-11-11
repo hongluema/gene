@@ -101,14 +101,14 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 - Swagger UI: http://127.0.0.1:8000/docs
 - ReDoc: http://127.0.0.1:8000/redoc
-- 健康检查: http://127.0.0.1:8000/health
+- 健康检查: http://127.0.0.1:8000/api/health
 
 ## 示例接口
 
 - 创建用户
 
 ```bash
-curl -X POST "http://127.0.0.1:8000/users/" \
+curl -X POST "http://127.0.0.1:8000/api/users/" \
   -H "Content-Type: application/json" \
   -d '{"mobile": "18200000000", "nickname": "Tester", "avatar": ""}'
 ```
@@ -116,13 +116,13 @@ curl -X POST "http://127.0.0.1:8000/users/" \
 - 查询用户列表（支持分页：skip, limit<=100，按 id 倒序）
 
 ```bash
-curl "http://127.0.0.1:8000/users/?skip=0&limit=20"
+curl "http://127.0.0.1:8000/api/users/?skip=0&limit=20"
 ```
 
 - 查询用户详情
 
 ```bash
-curl "http://127.0.0.1:8000/users/1"
+curl "http://127.0.0.1:8000/api/users/1"
 ```
 
 返回示例：

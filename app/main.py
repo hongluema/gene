@@ -26,10 +26,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routers
-app.include_router(api_router)
+# Routers (prefix all routes with /api)
+app.include_router(api_router, prefix="/api")
 
 
-@app.get("/health", tags=["health"])  # Simple root-level health endpoint
+@app.get("/api/health", tags=["health"])  # Prefixed health endpoint
 def health():
     return {"status": "ok"}
