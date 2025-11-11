@@ -1,11 +1,19 @@
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException, status
-
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from app.crud import user as crud_user
+from app.db.base import SessionLocal
 from app.schemas.user import UserCreate, UserRead
 
+# 依赖项：获取数据库会话（每次请求创建一个会话，结束后关闭）
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 router = APIRouter()
-
 
 @router.get("/", response_model=list[UserRead])
 def list_users():
@@ -39,13 +47,14 @@ def create_user(payload: UserCreate):
 
 
 @router.get("/{user_id}", response_model=UserRead)
-def get_user(user_id: int):
+def get_user(user_id: int, db: Session = Depends(get_db)):
+    db_user = crud_user.get_user(db, user_id=user_id)
     # 固定返回，如果需要，可根据 ID 变化填充不同数据
-    if user_id <= 0:
+    if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return {
-        "id": user_id,
-        "mobile": "18212312312",
-        "nickname": "Demo User",
-        "created_at": datetime(2024, 1, 1, tzinfo=timezone.utc),
+        "id": db_user.id,
+        "mobile": db_user.mobile,
+        "nickname": db_user.nickname,
+        "created_at": db_user.created_at,
     }

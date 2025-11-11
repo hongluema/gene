@@ -4,7 +4,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.api.routes import api_router
-from app.db.base import engine, Base
+from app.db.base import SessionLocal, engine, Base
 
 
 @asynccontextmanager
