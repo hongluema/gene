@@ -154,3 +154,16 @@ curl "http://127.0.0.1:8000/api/users/1"
 - 增加日志配置、错误码与统一响应结构
 - 引入测试框架（pytest）与 CI
 - 鉴权（JWT / OAuth2）与用户密码模型
+
+CREATE TABLE users (
+user_id VARCHAR(50) NOT NULL UNIQUE COMMENT '用户唯一标识（字符串）',
+openid VARCHAR(100) NOT NULL UNIQUE COMMENT '第三方平台唯一标识（如微信 openid）',
+name VARCHAR(128) COMMENT '用户姓名',
+nickname VARCHAR(255) COMMENT '微信昵称',
+avatar VARCHAR(255) COMMENT '微信头像',
+mobile VARCHAR(32) UNIQUE COMMENT '用户手机号（允许为 NULL，根据业务需求可调整为 NOT NULL）',
+idCard VARCHAR(32) UNIQUE COMMENT '用户身份证号（允许为 NULL，根据业务需求可调整为 NOT NULL）',
+sex ENUM('male', 'female') COMMENT '性别（male：男，female：女，允许为 NULL 表示未填写）',
+age INT CHECK (年龄 > 0 AND 年龄 <= 150) COMMENT '年龄（约束为合理范围：1-150 岁）',
+PRIMARY KEY (user_id) -- 以 user_id 为主键，确保唯一性和查询效率
+);
