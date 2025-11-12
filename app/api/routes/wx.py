@@ -1,6 +1,6 @@
 import httpx
 from fastapi import APIRouter, HTTPException
-
+import requests
 from app.core.config import settings
 from app.schemas.wx import WxLoginRequest, WxLoginResponse
 
@@ -10,7 +10,7 @@ router = APIRouter()
 
 @router.post("/login", response_model=WxLoginResponse)
 async def wx_login(payload: WxLoginRequest):
-    print(">>>payload", payload)
+    # print(">>>payload", payload)
     if not settings.WX_APPID or not settings.WX_SECRET:
         raise HTTPException(status_code=500, detail="WeChat appid/secret not configured")
 
@@ -21,6 +21,10 @@ async def wx_login(payload: WxLoginRequest):
         "grant_type": settings.WX_GRANT_TYPE,
     }
     print(">>>params", params)
+    # url = f"https://api.weixin.qq.com/sns/jscode2session?appid={params['appid']}&secret={params['secret']}&js_code={params['js_code']}&grant_type=authorization_code"
+    # response = requests.get(url)
+    # data = response.json()
+    # print(">>>data", data)
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(settings.WX_JSCODE2SESSION_URL, params=params)

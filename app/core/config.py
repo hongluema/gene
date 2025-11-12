@@ -3,8 +3,9 @@ from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # 微信小程序配置（jscode2session）
-WX_APPID="wx2c0cc3d42e2f2046"
-WX_SECRET="7f8e1d51fb5b0349030b7619d5bd8f6d"
+WX_APPID="wx357bbb5f4b26e2ed"
+WX_SECRET="1cb952edfbad25653d97d5cb20f8c00a"
+# 1cb952edfbad25653d97d5cb20f8c00a
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
