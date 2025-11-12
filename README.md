@@ -164,6 +164,8 @@ avatar VARCHAR(255) COMMENT '微信头像',
 mobile VARCHAR(32) UNIQUE COMMENT '用户手机号（允许为 NULL，根据业务需求可调整为 NOT NULL）',
 idCard VARCHAR(32) UNIQUE COMMENT '用户身份证号（允许为 NULL，根据业务需求可调整为 NOT NULL）',
 sex ENUM('male', 'female') COMMENT '性别（male：男，female：女，允许为 NULL 表示未填写）',
-age INT CHECK (年龄 > 0 AND 年龄 <= 150) COMMENT '年龄（约束为合理范围：1-150 岁）',
+age INT CHECK (age > 0 AND age <= 150) COMMENT '年龄（约束为合理范围：1-150 岁）',
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
 PRIMARY KEY (user_id) -- 以 user_id 为主键，确保唯一性和查询效率
 );

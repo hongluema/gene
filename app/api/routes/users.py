@@ -18,7 +18,7 @@ def list_users(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
 ):
-    stmt = select(User).order_by(User.id.desc()).offset(skip).limit(limit)
+    stmt = select(User).order_by(User.created_at.desc()).offset(skip).limit(limit)
     return list(db.scalars(stmt))
 
 
@@ -36,7 +36,7 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/{user_id}", response_model=UserRead)
-def get_user(user_id: int, db: Session = Depends(get_db)):
+def get_user(user_id: str, db: Session = Depends(get_db)):
     user = crud_user.get_user(db, user_id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -44,17 +44,25 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.patch("/{user_id}", response_model=UserRead)
-def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db)):
+def update_user(user_id: str, payload: UserUpdate, db: Session = Depends(get_db)):
     user = crud_user.get_user(db, user_id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    if payload.mobile is not None:
-        user.mobile = payload.mobile
-    if payload.avatar is not None:
-        user.avatar = payload.avatar
+    if payload.name is not None:
+        user.name = payload.name
     if payload.nickname is not None:
         user.nickname = payload.nickname
+    if payload.avatar is not None:
+        user.avatar = payload.avatar
+    if payload.mobile is not None:
+        user.mobile = payload.mobile
+    if payload.idCard is not None:
+        user.idCard = payload.idCard
+    if payload.sex is not None:
+        user.sex = payload.sex
+    if payload.age is not None:
+        user.age = payload.age
 
     try:
         db.commit()
@@ -66,7 +74,7 @@ def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db)
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(user_id: int, db: Session = Depends(get_db)):
+def delete_user(user_id: str, db: Session = Depends(get_db)):
     user = crud_user.get_user(db, user_id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
