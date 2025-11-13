@@ -9,4 +9,4 @@ class WxLoginResponse(BaseModel):
     openid: str
     session_key: str
     unionid: str | None = None
-
+    user_id: str

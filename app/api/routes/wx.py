@@ -50,6 +50,11 @@ async def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
     user = get_user_by_openid(db, openid)
     if not user:
         # 如果不存在，创建新用户
-        create_user_by_openid(db, openid)
+        user = create_user_by_openid(db, openid)
 
-    return WxLoginResponse(openid=openid, session_key=session_key, unionid=data.get("unionid"))
+    return WxLoginResponse(
+        openid=openid,
+        session_key=session_key,
+        unionid=data.get("unionid"),
+        user_id=user.user_id,
+    )
