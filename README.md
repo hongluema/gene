@@ -179,3 +179,12 @@ PRIMARY KEY (user_id) -- 以 user_id 为主键，确保唯一性和查询效率
 
 <!-- mysql登陆 -->
 <!-- mysql -h117.149.9.79 -uwalry -p'' -P33060 -->
+
+<!-- mock数据 -->
+
+curl -X POST "http://localhost:8002/api/organizations/" \
+ -H "Content-Type: application/json" \
+ -d '{
+"name": "测试组织",
+"desc": "这是一个测试组织的描述"
+}'
