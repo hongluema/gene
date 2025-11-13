@@ -169,3 +169,10 @@ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
 PRIMARY KEY (user_id) -- 以 user_id 为主键，确保唯一性和查询效率
 );
+
+<!-- create table prompt -->
+
+> 第一步
+> 将这个给我改成一个 organizations 表，字段有：organization_id(字符串)，name（字符串），desc（字符串），created_at（时间默认创建记录的时候，后续不再更新）,updated_at(默认当前时间，每次更新),created_at 和 updated_at 都不允许为空，自动填充，name 也不允许，desc 允许，organization_id 长度为 12，以 o 开头，剩余 11 为随机数
+> 第二步
+> 按照 projects 的 model，完善 crud 的 proejcts 文件和 schemas 目录的 projects 文件
