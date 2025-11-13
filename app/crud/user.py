@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.models.user import User
-from app.schemas.user import UserCreate
+from app.schemas.user import UserCreate, UserUpdate
 import random
 import string
 
@@ -61,3 +61,39 @@ def create_user_by_openid(db: Session, openid: str) -> User:
     db.commit()
     db.refresh(db_user)
     return db_user
+
+
+def get_users(db: Session, skip: int = 0, limit: int = 100) -> list[User]:
+    return db.query(User).offset(skip).limit(limit).all()
+
+
+def update_user(db: Session, user_id: str, user: UserUpdate) -> User | None:
+    db_user = db.query(User).filter(User.user_id == user_id).first()
+    if not db_user:
+        return None
+    if user.name is not None:
+        db_user.name = _normalize_empty_to_none(user.name)
+    if user.nickname is not None:
+        db_user.nickname = _normalize_empty_to_none(user.nickname)
+    if user.avatar is not None:
+        db_user.avatar = _normalize_empty_to_none(user.avatar)
+    if user.mobile is not None:
+        db_user.mobile = _normalize_empty_to_none(user.mobile)
+    if user.idCard is not None:
+        db_user.idCard = _normalize_empty_to_none(user.idCard)
+    if user.sex is not None:
+        db_user.sex = user.sex
+    if user.age is not None:
+        db_user.age = user.age
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
+def delete_user(db: Session, user_id: str) -> bool:
+    db_user = db.query(User).filter(User.user_id == user_id).first()
+    if not db_user:
+        return False
+    db.delete(db_user)
+    db.commit()
+    return True

@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -25,13 +24,6 @@ def list_users(
 @router.post("/", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 def create_user(payload: UserCreate, db: Session = Depends(get_db)):
     user = crud_user.create_user(db, user=payload)
-    db.add(user)
-    try:
-        db.commit()
-        db.refresh(user)
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(status_code=400, detail="Mobile already exists")
     return user
 
 
@@ -43,41 +35,17 @@ def get_user(user_id: str, db: Session = Depends(get_db)):
     return user
 
 
-@router.patch("/{user_id}", response_model=UserRead)
+@router.post("/{user_id}/update", response_model=UserRead)
 def update_user(user_id: str, payload: UserUpdate, db: Session = Depends(get_db)):
-    user = crud_user.get_user(db, user_id=user_id)
+    user = crud_user.update_user(db, user_id=user_id, user=payload)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-
-    if payload.name is not None:
-        user.name = payload.name
-    if payload.nickname is not None:
-        user.nickname = payload.nickname
-    if payload.avatar is not None:
-        user.avatar = payload.avatar
-    if payload.mobile is not None:
-        user.mobile = payload.mobile
-    if payload.idCard is not None:
-        user.idCard = payload.idCard
-    if payload.sex is not None:
-        user.sex = payload.sex
-    if payload.age is not None:
-        user.age = payload.age
-
-    try:
-        db.commit()
-        db.refresh(user)
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(status_code=400, detail="Mobile already exists")
     return user
 
 
-@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/{user_id}/delete")
 def delete_user(user_id: str, db: Session = Depends(get_db)):
-    user = crud_user.get_user(db, user_id=user_id)
-    if not user:
+    success = crud_user.delete_user(db, user_id=user_id)
+    if not success:
         raise HTTPException(status_code=404, detail="User not found")
-    db.delete(user)
-    db.commit()
     return None
