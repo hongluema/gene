@@ -25,7 +25,6 @@ def create_user(db: Session, user: UserCreate) -> User:
     db_user = User(
         user_id=generate_user_id(db),
         name=_normalize_empty_to_none(user.name),
-        nickname=_normalize_empty_to_none(user.nickname),
         avatar=_normalize_empty_to_none(user.avatar),
         mobile=_normalize_empty_to_none(user.mobile),
         idCard=_normalize_empty_to_none(user.idCard),
@@ -42,10 +41,6 @@ def get_user(db: Session, user_id: str) -> User | None:
     return db.query(User).filter(User.user_id == user_id).first()
 
 
-def get_user_by_username(db: Session, nickname: str) -> User | None:
-    return db.query(User).filter(User.nickname == nickname).first()
-
-
 def get_users(db: Session, skip: int = 0, limit: int = 100) -> list[User]:
     return db.query(User).offset(skip).limit(limit).all()
 
@@ -56,8 +51,6 @@ def update_user(db: Session, user_id: str, user: UserUpdate) -> User | None:
         return None
     if user.name is not None:
         db_user.name = _normalize_empty_to_none(user.name)
-    if user.nickname is not None:
-        db_user.nickname = _normalize_empty_to_none(user.nickname)
     if user.avatar is not None:
         db_user.avatar = _normalize_empty_to_none(user.avatar)
     if user.mobile is not None:
