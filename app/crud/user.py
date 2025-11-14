@@ -26,8 +26,8 @@ def create_user(db: Session, user: UserCreate) -> User:
         user_id=generate_user_id(db),
         name=_normalize_empty_to_none(user.name),
         avatar=_normalize_empty_to_none(user.avatar),
-        mobile=_normalize_empty_to_none(user.mobile),
-        idCard=_normalize_empty_to_none(user.idCard),
+        phone=_normalize_empty_to_none(user.phone),
+        id_number=_normalize_empty_to_none(user.id_number),
         sex=user.sex,  # 已通过 Pydantic 校验枚举
         age=user.age,
     )
@@ -53,10 +53,10 @@ def update_user(db: Session, user_id: str, user: UserUpdate) -> User | None:
         db_user.name = _normalize_empty_to_none(user.name)
     if user.avatar is not None:
         db_user.avatar = _normalize_empty_to_none(user.avatar)
-    if user.mobile is not None:
-        db_user.mobile = _normalize_empty_to_none(user.mobile)
-    if user.idCard is not None:
-        db_user.idCard = _normalize_empty_to_none(user.idCard)
+    if user.phone is not None:
+        db_user.phone = _normalize_empty_to_none(user.phone)
+    if user.id_number is not None:
+        db_user.id_number = _normalize_empty_to_none(user.id_number)
     if user.sex is not None:
         db_user.sex = user.sex
     if user.age is not None:
