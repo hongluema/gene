@@ -27,6 +27,28 @@ def create_sample(payload: SampleCreate, db: Session = Depends(get_db)):
     return sample
 
 
+@router.get("/phone/{phone}", response_model=list[SampleRead])
+def get_samples_by_phone(
+    phone: str,
+    db: Session = Depends(get_db),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+):
+    samples = crud_sample.get_samples_by_phone(db, phone=phone, skip=skip, limit=limit)
+    return samples
+
+
+@router.get("/id-number/{id_number}", response_model=list[SampleRead])
+def get_samples_by_id_number(
+    id_number: str,
+    db: Session = Depends(get_db),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+):
+    samples = crud_sample.get_samples_by_id_number(db, id_number=id_number, skip=skip, limit=limit)
+    return samples
+
+
 @router.get("/{sample_id}", response_model=SampleRead)
 def get_sample(sample_id: int, db: Session = Depends(get_db)):
     sample = crud_sample.get_sample(db, sample_id=sample_id)
