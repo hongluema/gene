@@ -2,14 +2,18 @@ from datetime import datetime
 from typing import Literal
 from pydantic import BaseModel
 from pydantic.types import StrictStr
-
+from pydantic import conint
 
 class SampleBase(BaseModel):
-    sample_number: StrictStr
+    code: StrictStr
     name: StrictStr
     type: Literal["fullBlood"]
     process: Literal["progressing", "progressed"]
     user_id: StrictStr
+    phone: StrictStr | None = None
+    id_number: StrictStr | None = None
+    sex: Literal["male", "female"] | None = None
+    age: conint(gt=0, le=150) | None = None
     project_id: StrictStr
     organization_id: StrictStr
     desc: StrictStr | None = None

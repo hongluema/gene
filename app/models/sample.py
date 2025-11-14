@@ -9,7 +9,7 @@ class Sample(Base):
     __tablename__ = "samples"
 
     sample_id: Mapped[str] = mapped_column(String(12), primary_key=True, index=True)
-    sample_number: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    code: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     type: Mapped[str] = mapped_column(Enum("fullBlood", name="sample_type_enum"), nullable=False, server_default="fullBlood")
     process: Mapped[str] = mapped_column(Enum("progressing", "progressed", name="sample_process_enum"), nullable=False, server_default="progressing")
