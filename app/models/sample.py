@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import BigInteger, String, TIMESTAMP, Enum, text
+from sqlalchemy import BigInteger, Integer, String, TIMESTAMP, Enum, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
