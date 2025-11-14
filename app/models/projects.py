@@ -8,7 +8,7 @@ from app.db.base import Base
 class Project(Base):
     __tablename__ = "projects"
 
-    project_id: Mapped[str] = mapped_column(String(12), primary_key=True, index=True)
+    project_id: Mapped[str] = mapped_column(String(12), primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     desc: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"), nullable=False)
