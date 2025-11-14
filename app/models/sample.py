@@ -18,8 +18,8 @@ class Sample(Base):
     id_number: Mapped[str | None] = mapped_column(String(32), unique=True, index=True, nullable=True)
     program_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
     org_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
-    sample_data_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
-    order_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    sample_data_id: Mapped[int] = mapped_column(BigInteger, index=True)
+    order_id: Mapped[int] = mapped_column(BigInteger, index=True)
     desc: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
