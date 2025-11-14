@@ -60,8 +60,8 @@ def update_sample(db: Session, sample_id: str, sample: SampleUpdate) -> Sample |
     db_sample = db.query(Sample).filter(Sample.sample_id == sample_id).first()
     if not db_sample:
         return None
-    if sample.sample_number is not None:
-        db_sample.sample_number = sample.sample_number
+    if sample.code is not None:
+        db_sample.sample_number = sample.code
     if sample.name is not None:
         db_sample.name = sample.name
     if sample.type is not None:

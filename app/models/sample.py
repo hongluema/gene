@@ -16,6 +16,8 @@ class Sample(Base):
     user_id: Mapped[str] = mapped_column(String(12), nullable=False, index=True)
     phone: Mapped[str | None] = mapped_column(String(32), unique=True, index=True, nullable=True)
     id_number: Mapped[str | None] = mapped_column(String(32), unique=True, index=True, nullable=True)
+    sex: Mapped[str | None] = mapped_column(Enum("male", "female", name="sex_enum"), nullable=True)
+    age: Mapped[int | None] = mapped_column(Integer, nullable=True)
     program_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
     org_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
     sample_data_id: Mapped[int] = mapped_column(BigInteger, index=True)
