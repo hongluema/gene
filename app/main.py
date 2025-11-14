@@ -17,13 +17,13 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
 
-# CORS
+# CORS - 允许所有跨域请求
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["*"],  # 允许所有来源
+    allow_credentials=False,  # 使用 "*" 时 credentials 必须为 False
+    allow_methods=["*"],  # 允许所有 HTTP 方法
+    allow_headers=["*"],  # 允许所有请求头
 )
 
 # Routers (prefix all routes with /api)
