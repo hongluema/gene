@@ -17,13 +17,19 @@ def generate_sample_id(db: Session) -> str:
 def create_sample(db: Session, sample: SampleCreate) -> Sample:
     db_sample = Sample(
         sample_id=generate_sample_id(db),
-        sample_number=sample.sample_number,
+        code=sample.code,
         name=sample.name,
         type=sample.type,
         process=sample.process,
         user_id=sample.user_id,
-        project_id=sample.project_id,
-        organization_id=sample.organization_id,
+        phone=sample.phone,
+        id_number=sample.id_number,
+        sex=sample.sex,
+        age=sample.age,
+        program_id=sample.program_id,
+        org_id=sample.org_id,
+        sample_data_id=sample.sample_data_id,
+        order_id=sample.order_id,
         desc=sample.desc,
     )
     db.add(db_sample)
@@ -36,8 +42,8 @@ def get_sample(db: Session, sample_id: str) -> Sample | None:
     return db.query(Sample).filter(Sample.sample_id == sample_id).first()
 
 
-def get_sample_by_number(db: Session, sample_number: str) -> Sample | None:
-    return db.query(Sample).filter(Sample.sample_number == sample_number).first()
+def get_sample_by_code(db: Session, code: str) -> Sample | None:
+    return db.query(Sample).filter(Sample.code == code).first()
 
 
 def get_samples(db: Session, skip: int = 0, limit: int = 100) -> list[Sample]:
@@ -48,12 +54,12 @@ def get_samples_by_user(db: Session, user_id: str, skip: int = 0, limit: int = 1
     return db.query(Sample).filter(Sample.user_id == user_id).offset(skip).limit(limit).all()
 
 
-def get_samples_by_project(db: Session, project_id: str, skip: int = 0, limit: int = 100) -> list[Sample]:
-    return db.query(Sample).filter(Sample.project_id == project_id).offset(skip).limit(limit).all()
+def get_samples_by_program(db: Session, program_id: int, skip: int = 0, limit: int = 100) -> list[Sample]:
+    return db.query(Sample).filter(Sample.program_id == program_id).offset(skip).limit(limit).all()
 
 
-def get_samples_by_organization(db: Session, organization_id: str, skip: int = 0, limit: int = 100) -> list[Sample]:
-    return db.query(Sample).filter(Sample.organization_id == organization_id).offset(skip).limit(limit).all()
+def get_samples_by_org(db: Session, org_id: int, skip: int = 0, limit: int = 100) -> list[Sample]:
+    return db.query(Sample).filter(Sample.org_id == org_id).offset(skip).limit(limit).all()
 
 
 def update_sample(db: Session, sample_id: str, sample: SampleUpdate) -> Sample | None:
@@ -61,7 +67,7 @@ def update_sample(db: Session, sample_id: str, sample: SampleUpdate) -> Sample |
     if not db_sample:
         return None
     if sample.code is not None:
-        db_sample.sample_number = sample.code
+        db_sample.code = sample.code
     if sample.name is not None:
         db_sample.name = sample.name
     if sample.type is not None:
@@ -70,10 +76,22 @@ def update_sample(db: Session, sample_id: str, sample: SampleUpdate) -> Sample |
         db_sample.process = sample.process
     if sample.user_id is not None:
         db_sample.user_id = sample.user_id
-    if sample.project_id is not None:
-        db_sample.project_id = sample.project_id
-    if sample.organization_id is not None:
-        db_sample.organization_id = sample.organization_id
+    if sample.phone is not None:
+        db_sample.phone = sample.phone
+    if sample.id_number is not None:
+        db_sample.id_number = sample.id_number
+    if sample.sex is not None:
+        db_sample.sex = sample.sex
+    if sample.age is not None:
+        db_sample.age = sample.age
+    if sample.program_id is not None:
+        db_sample.program_id = sample.program_id
+    if sample.org_id is not None:
+        db_sample.org_id = sample.org_id
+    if sample.sample_data_id is not None:
+        db_sample.sample_data_id = sample.sample_data_id
+    if sample.order_id is not None:
+        db_sample.order_id = sample.order_id
     if sample.desc is not None:
         db_sample.desc = sample.desc
     db.commit()
@@ -88,4 +106,3 @@ def delete_sample(db: Session, sample_id: str) -> bool:
     db.delete(db_sample)
     db.commit()
     return True
-
