@@ -9,6 +9,9 @@ SQLALCHEMY_DATABASE_URL = "mysql+pymysql://walry:arApp123qwe..@117.149.9.79:3306
 # 创建数据库引擎（echo=True 会打印 SQL 语句，调试用）
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
+    connect_args={
+        "init_command": "SET time_zone='+08:00'", # 设置时区为中国时区（UTC+8），只是接口展示数据的时候，但是数据库还是没改，这点要注意
+    },
     echo=True,  # 生产环境可关闭
     pool_pre_ping=True  # 检测连接有效性，避免断开
 )
