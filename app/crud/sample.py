@@ -54,6 +54,14 @@ def get_samples_by_user(db: Session, user_id: str, skip: int = 0, limit: int = 1
     return db.query(Sample).filter(Sample.user_id == user_id).offset(skip).limit(limit).all()
 
 
+def get_samples_by_phone(db: Session, phone: str, skip: int = 0, limit: int = 100) -> list[Sample]:
+    return db.query(Sample).filter(Sample.phone == phone).offset(skip).limit(limit).all()
+
+
+def get_samples_by_id_number(db: Session, id_number: str, skip: int = 0, limit: int = 100) -> list[Sample]:
+    return db.query(Sample).filter(Sample.id_number == id_number).offset(skip).limit(limit).all()
+
+
 def get_samples_by_program(db: Session, program_id: int, skip: int = 0, limit: int = 100) -> list[Sample]:
     return db.query(Sample).filter(Sample.program_id == program_id).offset(skip).limit(limit).all()
 
