@@ -188,3 +188,11 @@ curl -X POST "http://localhost:8002/api/organizations/" \
 "name": "测试组织",
 "desc": "这是一个测试组织的描述"
 }'
+
+<!-- 获取token -->
+
+curl -X 'POST' \
+ 'http://117.149.9.79:9003/auth/token' \
+ -H 'accept: application/json' \
+ -H 'Content-Type: application/x-www-form-urlencoded' \
+ -d 'username=xcxjk&password=aoruixcx123..&scope='

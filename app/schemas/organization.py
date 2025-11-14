@@ -18,7 +18,7 @@ class OrganizationUpdate(BaseModel):
 
 
 class OrganizationRead(OrganizationBase):
-    organization_id: str
+    org_id: int
     created_at: datetime
     updated_at: datetime
 

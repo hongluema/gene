@@ -27,25 +27,25 @@ def create_organization(payload: OrganizationCreate, db: Session = Depends(get_d
     return organization
 
 
-@router.get("/{organization_id}", response_model=OrganizationRead)
-def get_organization(organization_id: str, db: Session = Depends(get_db)):
-    organization = crud_organization.get_organization(db, organization_id=organization_id)
+@router.get("/{org_id}", response_model=OrganizationRead)
+def get_organization(org_id: int, db: Session = Depends(get_db)):
+    organization = crud_organization.get_organization(db, org_id=org_id)
     if not organization:
         raise HTTPException(status_code=404, detail="Organization not found")
     return organization
 
 
-@router.post("/{organization_id}/update", response_model=OrganizationRead)
-def update_organization(organization_id: str, payload: OrganizationUpdate, db: Session = Depends(get_db)):
-    organization = crud_organization.update_organization(db, organization_id=organization_id, organization=payload)
+@router.post("/{org_id}/update", response_model=OrganizationRead)
+def update_organization(org_id: int, payload: OrganizationUpdate, db: Session = Depends(get_db)):
+    organization = crud_organization.update_organization(db, org_id=org_id, organization=payload)
     if not organization:
         raise HTTPException(status_code=404, detail="Organization not found")
     return organization
 
 
-@router.post("/{organization_id}/delete")
-def delete_organization(organization_id: str, db: Session = Depends(get_db)):
-    success = crud_organization.delete_organization(db, organization_id=organization_id)
+@router.post("/{org_id}/delete")
+def delete_organization(org_id: int, db: Session = Depends(get_db)):
+    success = crud_organization.delete_organization(db, org_id=org_id)
     if not success:
         raise HTTPException(status_code=404, detail="Organization not found")
     return None
