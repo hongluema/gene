@@ -5,11 +5,11 @@ import random
 import string
 
 
-def generate_sample_id(db: Session) -> str:
-    """生成唯一的 sample_id，格式为 's' + 11位随机字符（总计12位）。"""
+def generate_sample_id(db: Session) -> int:
+    """生成唯一的 sample_id，格式为 6 + 17位随机数字（总计18位）。"""
     while True:
-        random_chars = ''.join(random.choices(string.ascii_lowercase + string.digits, k=11))
-        sample_id = f"s{random_chars}"
+        random_digits = ''.join(random.choices(string.digits, k=17))
+        sample_id = int(f"6{random_digits}")
         if not db.query(Sample).filter(Sample.sample_id == sample_id).first():
             return sample_id
 
@@ -38,7 +38,7 @@ def create_sample(db: Session, sample: SampleCreate) -> Sample:
     return db_sample
 
 
-def get_sample(db: Session, sample_id: str) -> Sample | None:
+def get_sample(db: Session, sample_id: int) -> Sample | None:
     return db.query(Sample).filter(Sample.sample_id == sample_id).first()
 
 
@@ -62,7 +62,7 @@ def get_samples_by_org(db: Session, org_id: int, skip: int = 0, limit: int = 100
     return db.query(Sample).filter(Sample.org_id == org_id).offset(skip).limit(limit).all()
 
 
-def update_sample(db: Session, sample_id: str, sample: SampleUpdate) -> Sample | None:
+def update_sample(db: Session, sample_id: int, sample: SampleUpdate) -> Sample | None:
     db_sample = db.query(Sample).filter(Sample.sample_id == sample_id).first()
     if not db_sample:
         return None
@@ -99,7 +99,7 @@ def update_sample(db: Session, sample_id: str, sample: SampleUpdate) -> Sample |
     return db_sample
 
 
-def delete_sample(db: Session, sample_id: str) -> bool:
+def delete_sample(db: Session, sample_id: int) -> bool:
     db_sample = db.query(Sample).filter(Sample.sample_id == sample_id).first()
     if not db_sample:
         return False

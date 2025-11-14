@@ -44,7 +44,7 @@ class SampleUpdate(BaseModel):
 
 
 class SampleRead(SampleBase):
-    sample_id: str
+    sample_id: int
     created_at: datetime
     updated_at: datetime
 
