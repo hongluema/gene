@@ -9,9 +9,7 @@ class User(Base):
     __tablename__ = "users"
 
     user_id: Mapped[str] = mapped_column(String(50), primary_key=True, index=True)
-    openid: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)
     name: Mapped[str | None] = mapped_column(String(128), nullable=True)
-    nickname: Mapped[str | None] = mapped_column(String(255), nullable=True)
     avatar: Mapped[str | None] = mapped_column(String(255), nullable=True)
     mobile: Mapped[str | None] = mapped_column(String(32), unique=True, index=True, nullable=True)
     idCard: Mapped[str | None] = mapped_column(String(32), unique=True, index=True, nullable=True)

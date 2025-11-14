@@ -14,14 +14,13 @@ def _empty_to_none(v: str | None) -> str | None:
 
 class UserBase(BaseModel):
     name: StrictStr | None = None
-    nickname: StrictStr | None = None
     avatar: StrictStr | None = None
     mobile: StrictStr | None = None
     idCard: StrictStr | None = None
     sex: Literal["male", "female"] | None = None
     age: conint(gt=0, le=150) | None = None
 
-    @field_validator("name", "nickname", "avatar", "mobile", "idCard")
+    @field_validator("name", "avatar", "mobile", "idCard")
     @classmethod
     def empty_strings_as_none(cls, v: str | None):
         return _empty_to_none(v)
@@ -37,7 +36,6 @@ class UserUpdate(UserBase):
 
 class UserRead(UserBase):
     user_id: str
-    openid: str
     created_at: datetime | None = None
     updated_at: datetime | None = None
 

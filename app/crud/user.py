@@ -24,7 +24,6 @@ def generate_user_id(db: Session) -> str:
 def create_user(db: Session, user: UserCreate) -> User:
     db_user = User(
         user_id=generate_user_id(db),
-        openid=user.openid,
         name=_normalize_empty_to_none(user.name),
         nickname=_normalize_empty_to_none(user.nickname),
         avatar=_normalize_empty_to_none(user.avatar),
@@ -45,22 +44,6 @@ def get_user(db: Session, user_id: str) -> User | None:
 
 def get_user_by_username(db: Session, nickname: str) -> User | None:
     return db.query(User).filter(User.nickname == nickname).first()
-
-
-def get_user_by_openid(db: Session, openid: str) -> User | None:
-    return db.query(User).filter(User.openid == openid).first()
-
-
-def create_user_by_openid(db: Session, openid: str) -> User:
-    """根据 openid 创建新用户，自动生成 user_id。"""
-    db_user = User(
-        user_id=generate_user_id(db),
-        openid=openid,
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
 
 
 def get_users(db: Session, skip: int = 0, limit: int = 100) -> list[User]:
