@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -32,10 +33,13 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
     if payload.phone:
         existed = db.query(User).filter(User.phone == payload.phone).first()
         if existed:
-            return {"message": "用户已经存在", "code": 200, "data": {"user_id": existed.user_id}}
+            return JSONResponse(
+                content={"message": "用户已经存在", "data": {"user_id": existed.user_id}},
+                status_code=200,
+            )
 
     user = crud_user.create_user(db, user=payload)
-    return {"message": "创建成功", "code": 200, "data": user}
+    return user
 
 
 @router.get("/{user_id}", response_model=UserRead)
