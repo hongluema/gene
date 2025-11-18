@@ -105,35 +105,34 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 ## 示例接口
 
-- 创建用户
+- 创建用户（如手机号已存在则直接返回已存在的 user_id）
 
 ```bash
-curl -X POST "http://127.0.0.1:8000/api/users/" \
+curl -X POST "http://127.0.0.1:8000/api/users/create" \
   -H "Content-Type: application/json" \
-  -d '{"mobile": "18200000000", "nickname": "Tester", "avatar": ""}'
+  -d '{"phone": "18200000000", "name": "Tester", "avatar": ""}'
 ```
 
-- 查询用户列表（支持分页：skip, limit<=100，按 id 倒序）
+- 查询用户列表（支持分页：skip, limit<=100，按创建时间倒序）
 
 ```bash
 curl "http://127.0.0.1:8000/api/users/?skip=0&limit=20"
 ```
 
-- 查询用户详情
+- 查询用户详情（按 ID）
 
 ```bash
-curl "http://127.0.0.1:8000/api/users/1"
+curl "http://127.0.0.1:8000/api/users/by-id?user_id=uabcdefghijk"
 ```
 
-返回示例：
+返回说明（已启用统一响应包装）：
 
 ```json
-{
-  "id": 1,
-  "mobile": "18200000000",
-  "nickname": "Tester",
-  "created_at": "2024-01-01T00:00:00Z"
-}
+// 创建成功（201）
+{ "data": { /* User 对象 */ }, "message": "", "status_code": 201 }
+
+// 已存在（200）
+{ "data": { "user_id": "uabcdefghijk" }, "message": "用户已经存在", "status_code": 200 }
 ```
 
 ## 重要说明
@@ -147,10 +146,12 @@ curl "http://127.0.0.1:8000/api/users/1"
 - 统一响应中间件：所有 JSON 响应会被包装为 `{ data, message, status_code }`。
   - 非分页：`data` 为原始对象或列表。
   - 分页：若返回结构包含 `rows` 与 `total`，则 `data` 为 `{ list, total }`。
-  - 错误：`message` 来自 `detail` 或内部错误提示，`status_code` 为对应状态码。
+  - 错误：
+    - 业务显式 `HTTPException` 按其状态码与信息包装。
+    - 未处理异常由装饰器转换为 `200`，`data` 为 `{ code: 500, message: '服务器异常', data: null }`。
 
 - 异常日志装饰器：路由中使用 `@log_exceptions`（已应用到 users、projects、sample、organization、remote）。
-  - 记录未处理异常堆栈，并返回 `HTTP 500` 与消息 `服务器异常`。
+  - 记录未处理异常堆栈，并以 `HTTP 200` 返回 `{ code: 500, message: '服务器异常', data: null }` 结构，由中间件统一包装。
 
 - 日志配置：`ERROR` 级别写入 `logs/app.log`，采用滚动日志（5MB，最多 5 个备份）。
   - 配置入口：`app/core/logging_config.py`，在 `app/main.py` 中初始化。
