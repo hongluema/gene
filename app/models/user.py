@@ -13,7 +13,7 @@ class User(Base):
     avatar: Mapped[str | None] = mapped_column(String(255), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(32), unique=True, index=True, nullable=True)
     id_number: Mapped[str | None] = mapped_column(String(32), unique=True, index=True, nullable=True)
-    sex: Mapped[str | None] = mapped_column(Enum("male", "female", name="sex_enum"), nullable=True)
+    gender: Mapped[str | None] = mapped_column(Enum("male", "female", name="gender_enum"), nullable=True)
     age: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime | None] = mapped_column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"), nullable=True)
     updated_at: Mapped[datetime | None] = mapped_column(

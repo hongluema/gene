@@ -13,7 +13,7 @@ class SampleBase(BaseModel):
     user_id: StrictStr
     phone: StrictStr | None = None
     id_number: StrictStr | None = None
-    sex: Literal["male", "female"] | None = None
+    gender: Literal["male", "female"] | None = None
     age: conint(gt=0, le=150) | None = None
     program_id: int
     org_id: int
@@ -34,7 +34,7 @@ class SampleUpdate(BaseModel):
     user_id: StrictStr | None = None
     phone: StrictStr | None = None
     id_number: StrictStr | None = None
-    sex: Literal["male", "female"] | None = None
+    gender: Literal["male", "female"] | None = None
     age: conint(gt=0, le=150) | None = None
     program_id: int | None = None
     org_id: int | None = None

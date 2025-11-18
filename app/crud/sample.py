@@ -24,7 +24,7 @@ def create_sample(db: Session, sample: SampleCreate) -> Sample:
         user_id=sample.user_id,
         phone=sample.phone,
         id_number=sample.id_number,
-        sex=sample.sex,
+        gender=sample.gender,
         age=sample.age,
         program_id=sample.program_id,
         org_id=sample.org_id,
@@ -88,8 +88,8 @@ def update_sample(db: Session, sample_id: int, sample: SampleUpdate) -> Sample |
         db_sample.phone = sample.phone
     if sample.id_number is not None:
         db_sample.id_number = sample.id_number
-    if sample.sex is not None:
-        db_sample.sex = sample.sex
+    if sample.gender is not None:
+        db_sample.gender = sample.gender
     if sample.age is not None:
         db_sample.age = sample.age
     if sample.program_id is not None:

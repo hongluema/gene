@@ -144,6 +144,7 @@ curl "http://127.0.0.1:8000/api/users/by-id?user_id=uabcdefghijk"
 ## 统一响应与日志
 
 - 统一响应中间件：所有 JSON 响应会被包装为 `{ data, message, status_code }`。
+
   - 非分页：`data` 为原始对象或列表。
   - 分页：若返回结构包含 `rows` 与 `total`，则 `data` 为 `{ list, total }`。
   - 错误：
@@ -151,6 +152,7 @@ curl "http://127.0.0.1:8000/api/users/by-id?user_id=uabcdefghijk"
     - 未处理异常由装饰器转换为 `200`，`data` 为 `{ code: 500, message: '服务器异常', data: null }`。
 
 - 异常日志装饰器：路由中使用 `@log_exceptions`（已应用到 users、projects、sample、organization、remote）。
+
   - 记录未处理异常堆栈，并以 `HTTP 200` 返回 `{ code: 500, message: '服务器异常', data: null }` 结构，由中间件统一包装。
 
 - 日志配置：`ERROR` 级别写入 `logs/app.log`，采用滚动日志（5MB，最多 5 个备份）。
@@ -176,7 +178,7 @@ name VARCHAR(128),
 avatar VARCHAR(255),
 phone VARCHAR(32) UNIQUE,
 id_number VARCHAR(32) UNIQUE,
-sex ENUM('male','female'),
+gender ENUM('male','female'),
 age INTEGER,
 created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
 updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,

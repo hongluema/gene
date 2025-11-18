@@ -28,7 +28,7 @@ def create_user(db: Session, user: UserCreate) -> User:
         avatar=_normalize_empty_to_none(user.avatar),
         phone=_normalize_empty_to_none(user.phone),
         id_number=_normalize_empty_to_none(user.id_number),
-        sex=user.sex,  # 已通过 Pydantic 校验枚举
+        gender=user.gender,  # 已通过 Pydantic 校验枚举
         age=user.age,
     )
     db.add(db_user)
@@ -57,8 +57,8 @@ def update_user(db: Session, user_id: str, user: UserUpdate) -> User | None:
         db_user.phone = _normalize_empty_to_none(user.phone)
     if user.id_number is not None:
         db_user.id_number = _normalize_empty_to_none(user.id_number)
-    if user.sex is not None:
-        db_user.sex = user.sex
+    if user.gender is not None:
+        db_user.gender = user.gender
     if user.age is not None:
         db_user.age = user.age
     db.commit()
