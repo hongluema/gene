@@ -4,6 +4,7 @@ from starlette.middleware.cors import CORSMiddleware
 from app.middleware.response_wrapper import UnifiedResponseMiddleware
 
 from app.core.config import settings
+from app.core.logging_config import setup_logging
 from app.api.routes import api_router
 from app.db.base import SessionLocal, engine, Base
 
@@ -17,6 +18,9 @@ async def lifespan(_: FastAPI):
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
+
+# 初始化日志：ERROR 级别写入文件
+setup_logging(log_level="ERROR", log_file="logs/app.log")
 
 # CORS - 允许所有跨域请求
 app.add_middleware(

@@ -6,12 +6,14 @@ from app.api.deps import get_db
 from app.models.projects import Project
 from app.schemas.projects import ProjectCreate, ProjectRead, ProjectUpdate
 from app.crud import projects as crud_project
+from app.common.decorators import log_exceptions
 
 
 router = APIRouter()
 
 
 @router.get("/", response_model=list[ProjectRead])
+@log_exceptions
 def list_projects(
     db: Session = Depends(get_db),
     skip: int = Query(0, ge=0),
@@ -22,12 +24,14 @@ def list_projects(
 
 
 @router.post("/", response_model=ProjectRead, status_code=status.HTTP_201_CREATED)
+@log_exceptions
 def create_project(payload: ProjectCreate, db: Session = Depends(get_db)):
     project = crud_project.create_project(db, project=payload)
     return project
 
 
 @router.get("/{project_id}", response_model=ProjectRead)
+@log_exceptions
 def get_project(project_id: str, db: Session = Depends(get_db)):
     project = crud_project.get_project(db, project_id=project_id)
     if not project:
@@ -36,6 +40,7 @@ def get_project(project_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("/{project_id}/update", response_model=ProjectRead)
+@log_exceptions
 def update_project(project_id: str, payload: ProjectUpdate, db: Session = Depends(get_db)):
     project = crud_project.update_project(db, project_id=project_id, project=payload)
     if not project:
@@ -44,6 +49,7 @@ def update_project(project_id: str, payload: ProjectUpdate, db: Session = Depend
 
 
 @router.post("/{project_id}/delete")
+@log_exceptions
 def delete_project(project_id: str, db: Session = Depends(get_db)):
     success = crud_project.delete_project(db, project_id=project_id)
     if not success:

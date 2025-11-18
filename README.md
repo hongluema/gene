@@ -142,6 +142,20 @@ curl "http://127.0.0.1:8000/api/users/1"
 - 同步 SQLAlchemy：本模板使用 SQLAlchemy 同步引擎 + `SessionLocal`。如果需要全链路异步，请切换为 `sqlalchemy[asyncio]` + `asyncmy/aiomysql`，并改造依赖和路由为 async 版本。
 - CORS：通过环境变量 `CORS_ORIGINS` 配置（逗号分隔）。生产环境请设置为明确的域名白名单。
 
+## 统一响应与日志
+
+- 统一响应中间件：所有 JSON 响应会被包装为 `{ data, message, status_code }`。
+  - 非分页：`data` 为原始对象或列表。
+  - 分页：若返回结构包含 `rows` 与 `total`，则 `data` 为 `{ list, total }`。
+  - 错误：`message` 来自 `detail` 或内部错误提示，`status_code` 为对应状态码。
+
+- 异常日志装饰器：路由中使用 `@log_exceptions`（已应用到 users、projects、sample、organization、remote）。
+  - 记录未处理异常堆栈，并返回 `HTTP 500` 与消息 `服务器异常`。
+
+- 日志配置：`ERROR` 级别写入 `logs/app.log`，采用滚动日志（5MB，最多 5 个备份）。
+  - 配置入口：`app/core/logging_config.py`，在 `app/main.py` 中初始化。
+  - 日志示例：`2024-11-14 12:00:00 [ERROR] app.api.routes.users - ... (path/file.py:123)`。
+
 ## 常见问题
 
 - 连接失败：请检查 `DATABASE_URL` 是否正确（用户名、密码、主机、端口、数据库名），以及 MySQL 是否允许外部连接。

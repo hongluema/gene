@@ -3,6 +3,7 @@ from typing import Any
 
 import httpx
 from fastapi import APIRouter, HTTPException
+from app.common.decorators import log_exceptions
 
 from app.core.constants import REMOTE_TOKEN
 
@@ -62,6 +63,7 @@ def _extract_token(data: dict[str, Any]) -> str | None:
 
 @router.get("/token")
 @router.post("/token")
+@log_exceptions
 async def get_remote_token():
     try:
         data = await _fetch_token()
@@ -97,6 +99,7 @@ async def _fetch_projects() -> dict:
 
 # get请求获取projects，api是 /api/p/list
 @router.get("/projects")
+@log_exceptions
 async def get_projects():
     projects = await _fetch_projects()
     return projects

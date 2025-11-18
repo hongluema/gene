@@ -6,12 +6,14 @@ from app.api.deps import get_db
 from app.models.sample import Sample
 from app.schemas.sample import SampleCreate, SampleRead, SampleUpdate
 from app.crud import sample as crud_sample
+from app.common.decorators import log_exceptions
 
 
 router = APIRouter()
 
 
 @router.get("/", response_model=list[SampleRead])
+@log_exceptions
 def list_samples(
     db: Session = Depends(get_db),
     skip: int = Query(0, ge=0),
@@ -22,12 +24,14 @@ def list_samples(
 
 
 @router.post("/", response_model=SampleRead, status_code=status.HTTP_201_CREATED)
+@log_exceptions
 def create_sample(payload: SampleCreate, db: Session = Depends(get_db)):
     sample = crud_sample.create_sample(db, sample=payload)
     return sample
 
 
 @router.get("/phone/{phone}", response_model=list[SampleRead])
+@log_exceptions
 def get_samples_by_phone(
     phone: str,
     db: Session = Depends(get_db),
@@ -39,6 +43,7 @@ def get_samples_by_phone(
 
 
 @router.get("/id-number/{id_number}", response_model=list[SampleRead])
+@log_exceptions
 def get_samples_by_id_number(
     id_number: str,
     db: Session = Depends(get_db),
@@ -50,6 +55,7 @@ def get_samples_by_id_number(
 
 
 @router.get("/{sample_id}", response_model=SampleRead)
+@log_exceptions
 def get_sample(sample_id: int, db: Session = Depends(get_db)):
     sample = crud_sample.get_sample(db, sample_id=sample_id)
     if not sample:
@@ -58,6 +64,7 @@ def get_sample(sample_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{sample_id}/update", response_model=SampleRead)
+@log_exceptions
 def update_sample(sample_id: int, payload: SampleUpdate, db: Session = Depends(get_db)):
     sample = crud_sample.update_sample(db, sample_id=sample_id, sample=payload)
     if not sample:
@@ -66,6 +73,7 @@ def update_sample(sample_id: int, payload: SampleUpdate, db: Session = Depends(g
 
 
 @router.post("/{sample_id}/delete")
+@log_exceptions
 def delete_sample(sample_id: int, db: Session = Depends(get_db)):
     success = crud_sample.delete_sample(db, sample_id=sample_id)
     if not success:
