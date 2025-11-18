@@ -27,8 +27,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    openid: StrictStr
-
+    pass
 
 class UserUpdate(UserBase):
     pass

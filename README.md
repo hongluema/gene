@@ -156,19 +156,18 @@ curl "http://127.0.0.1:8000/api/users/1"
 - 鉴权（JWT / OAuth2）与用户密码模型
 
 CREATE TABLE users (
-user_id VARCHAR(50) NOT NULL UNIQUE COMMENT '用户唯一标识（字符串）',
-openid VARCHAR(100) NOT NULL UNIQUE COMMENT '第三方平台唯一标识（如微信 openid）',
-name VARCHAR(128) COMMENT '用户姓名',
-nickname VARCHAR(255) COMMENT '微信昵称',
-avatar VARCHAR(255) COMMENT '微信头像',
-mobile VARCHAR(32) UNIQUE COMMENT '用户手机号（允许为 NULL，根据业务需求可调整为 NOT NULL）',
-idCard VARCHAR(32) UNIQUE COMMENT '用户身份证号（允许为 NULL，根据业务需求可调整为 NOT NULL）',
-sex ENUM('male', 'female') COMMENT '性别（male：男，female：女，允许为 NULL 表示未填写）',
-age INT CHECK (age > 0 AND age <= 150) COMMENT '年龄（约束为合理范围：1-150 岁）',
-created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
-PRIMARY KEY (user_id) -- 以 user_id 为主键，确保唯一性和查询效率
-);
+user_id VARCHAR(50) NOT NULL,
+name VARCHAR(128),
+avatar VARCHAR(255),
+phone VARCHAR(32) UNIQUE,
+id_number VARCHAR(32) UNIQUE,
+sex ENUM('male','female'),
+age INTEGER,
+created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+PRIMARY KEY (user_id),
+CONSTRAINT users_chk_1 CHECK (age > 0 AND age <= 150)
+)
 
 <!-- create table prompt -->
 

@@ -21,7 +21,7 @@ def list_users(
     return list(db.scalars(stmt))
 
 
-@router.post("/", response_model=UserRead, status_code=status.HTTP_201_CREATED)
+@router.post("/create", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 def create_user(payload: UserCreate, db: Session = Depends(get_db)):
     user = crud_user.create_user(db, user=payload)
     return user

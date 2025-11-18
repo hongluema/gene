@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
+from app.middleware.response_wrapper import UnifiedResponseMiddleware
 
 from app.core.config import settings
 from app.api.routes import api_router
@@ -25,6 +26,9 @@ app.add_middleware(
     allow_methods=["*"],  # 允许所有 HTTP 方法
     allow_headers=["*"],  # 允许所有请求头
 )
+
+# 统一响应中间件：将响应改为 {data, message, status_code}
+app.add_middleware(UnifiedResponseMiddleware)
 
 # Routers (prefix all routes with /api)
 app.include_router(api_router, prefix="/api")
