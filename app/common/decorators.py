@@ -24,7 +24,7 @@ def log_exceptions(func):
                 raise
             except Exception:  # noqa: BLE001
                 logger.exception("Unhandled error in %s", func.__name__)
-                raise HTTPException(status_code=500, detail="服务器异常")
+                raise HTTPException(status_code=200, detail="服务器异常")
 
         return async_wrapper
 
@@ -36,7 +36,7 @@ def log_exceptions(func):
             raise
         except Exception:  # noqa: BLE001
             logger.exception("Unhandled error in %s", func.__name__)
-            raise HTTPException(status_code=500, detail="服务器异常")
+            raise HTTPException(status_code=200, detail="服务器异常")
 
     return sync_wrapper
 
