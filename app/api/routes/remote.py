@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Any
 
+from fastapi.responses import JSONResponse
 import httpx
 from fastapi import APIRouter, HTTPException
 from app.common.decorators import log_exceptions
@@ -102,4 +103,9 @@ async def _fetch_projects() -> dict:
 @log_exceptions
 async def get_projects():
     projects = await _fetch_projects()
-    return projects
+    data = projects.get('content').get('rows');
+    print('>>>>projects', );
+    return JSONResponse(
+        content={"message": "success", "data": {"list": data, "total": 100}},
+        status_code=200,
+    )
