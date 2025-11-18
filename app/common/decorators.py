@@ -2,17 +2,20 @@ import logging
 import inspect
 from functools import wraps
 from fastapi import HTTPException
+from starlette.responses import JSONResponse
 
 
 logger = logging.getLogger(__name__)
 
 
 def log_exceptions(func):
-    """Log unhandled exceptions and convert to HTTP 500 with Chinese message.
+    """Log unhandled exceptions and return HTTP 200 with error payload.
 
     - Keeps existing HTTPException (e.g., 404) behavior unchanged.
     - Logs stacktrace for unexpected errors.
-    - Returns 500 with detail "服务器异常" to be picked by response wrapper.
+    - Returns 200 with body: { "data": { "code": 500, "message": "服务器异常", "data": null } }
+      The unified response middleware will wrap it to
+      { data, message: '', status_code: 200 }.
     """
 
     if inspect.iscoroutinefunction(func):
@@ -24,7 +27,8 @@ def log_exceptions(func):
                 raise
             except Exception:  # noqa: BLE001
                 logger.exception("Unhandled error in %s", func.__name__)
-                raise HTTPException(status_code=200, detail="服务器异常")
+                payload = {"data": {"code": 500, "message": "服务器异常", "data": None}}
+                return JSONResponse(content=payload, status_code=200)
 
         return async_wrapper
 
@@ -36,7 +40,7 @@ def log_exceptions(func):
             raise
         except Exception:  # noqa: BLE001
             logger.exception("Unhandled error in %s", func.__name__)
-            raise HTTPException(status_code=200, detail="服务器异常")
+            payload = {"data": {"code": 500, "message": "服务器异常", "data": None}}
+            return JSONResponse(content=payload, status_code=200)
 
     return sync_wrapper
-
