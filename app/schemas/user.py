@@ -30,7 +30,7 @@ class UserCreate(UserBase):
     pass
 
 class UserUpdate(UserBase):
-    pass
+    user_id: str
 
 
 class UserRead(UserBase):

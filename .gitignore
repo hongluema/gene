@@ -3,3 +3,4 @@ __pycache__/**
 
 .env.example
 *.py[cod]
+/logs/app.log

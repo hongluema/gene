@@ -34,7 +34,7 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
         existed = db.query(User).filter(User.phone == payload.phone).first()
         if existed:
             return JSONResponse(
-                content={"message": "用户已经存在", "data": {"user_id": existed.user_id}},
+                content={"message": "用户已经存在", "data": {"user_id": existed.user_id, "isProfileComplete": existed.id_number}},
                 status_code=200,
             )
 
@@ -51,12 +51,16 @@ def get_user(user_id: str, db: Session = Depends(get_db)):
     return user
 
 
-@router.post("/{user_id}/update", response_model=UserRead)
+@router.post("/update", response_model=UserRead)
 @log_exceptions
-def update_user(user_id: str, payload: UserUpdate, db: Session = Depends(get_db)):
-    user = crud_user.update_user(db, user_id=user_id, user=payload)
+def update_user(payload: UserUpdate, db: Session = Depends(get_db)):
+    print('>>>>>payload', payload);
+    user = crud_user.update_user(db, user_id=payload.user_id, user=payload)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        return JSONResponse(
+            content={"message": "用户不存在", "data": {"user_id": payload.user_id}},
+            status_code=200,
+        )
     return user
 
 
