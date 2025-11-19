@@ -125,22 +125,23 @@ async def _post_remote_api(payload: dict) -> dict:
             "Authorization": f"Bearer {REMOTE_TOKEN}",
         }
         resp = await client.post(f"{BASE_API}/api", headers=headers, json=payload)
-        print('>>>>resp', resp.json());
+        print('>>>>resp', resp.json().get('content'));
         resp.raise_for_status()
-        return resp.json()
+        return resp.json().get('content')
 
 
-def _extract_remote_id(data: dict[str, Any]) -> Any:
+# def _extract_remote_id(data: dict[str, Any]) -> Any:
     # Try common locations for an identifier
-    # # for key in ("id", "order_id"):
-    # #     if key in data:
-    # #         return data[key]
-    content = data.get("content") if isinstance(data, dict) else None
-    if isinstance(content, dict):
-        for key in ("id", "order_id"):
-            if key in content:
-                return content[key]
-    return None
+    # return data.get('id');
+    # for key in ("id", "order_id"):
+    #     if key in data:
+    #         return data[key]
+    # content = data.get("content") if isinstance(data, dict) else None
+    # if isinstance(content, dict):
+    #     for key in ("id", "order_id"):
+    #         if key in content:
+    #             return content[key]
+    # return None
 
 
 @router.post("/sample/create")
@@ -150,10 +151,8 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
     remote_resp = await _post_remote_api(payload)
 
     # Extract id from remote response
-    remote_id = _extract_remote_id(remote_resp)
+    remote_id = remote_resp.get('other_code_list')[0];
     print('>>>>remote_id', remote_id, payload);
-    # Try to map back to local sample via provided samples[0].other_code (fallback to code)
-    updated_sample_id: int | None = None
     try:
         samples = payload.get("samples") if isinstance(payload, dict) else None
         if isinstance(samples, list) and samples:
@@ -171,7 +170,6 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
                             db_sample.order_id = None
                         db.commit()
                         db.refresh(db_sample)
-                        updated_sample_id = db_sample.sample_id
     except Exception:
         # Swallow mapping errors; still return remote response
         pass
@@ -179,7 +177,7 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
     return JSONResponse(
         content={
             "message": "success",
-            "data": {"remote": remote_resp, "order_id": remote_id, "updated_sample_id": updated_sample_id},
+            "data": remote_resp,
         },
         status_code=200,
     )
