@@ -217,11 +217,6 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
 
     # Extract potential order id from common keys
     order_id_val = remote_resp.get(id)
-    # for k in ("order_id", "id", "orderId"):
-    #     v = remote_resp.get(k)
-    #     if v is not None:
-    #         order_id_val = v
-    #         break
 
     print('>>>>remote_code/order_id_src', remote_code, order_id_val, remote_resp)
     try:
