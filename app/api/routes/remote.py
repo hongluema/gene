@@ -160,6 +160,7 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
     code = (first or {}).get("other_code")
     name = (customer or {}).get("name")
     sex = (customer or {}).get("sex")  # male/female
+    age = (customer or {}).get("age")
     phone = (customer or {}).get("phone")
     id_number = (customer or {}).get("id_number")
     programs = (first or {}).get("programs") or []
@@ -193,7 +194,7 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
             phone=phone,
             id_number=id_number,
             gender=sex,
-            age=None,
+            age=age,
             program_id=program_id,
             org_id=org_id,
             sample_data_id=None,
@@ -216,7 +217,7 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
         remote_code = None
 
     # Extract potential order id from common keys
-    order_id_val = remote_resp.get(id)
+    order_id_val = remote_resp.get('id')
 
     print('>>>>remote_code/order_id_src', remote_code, order_id_val, remote_resp)
     try:
