@@ -130,7 +130,7 @@ async def _post_remote_api(payload: dict) -> dict:
             "Authorization": f"Bearer {REMOTE_TOKEN}",
         }
         resp = await client.post(f"{BASE_API}/api", headers=headers, json=payload)
-        print('>>>>resp', resp.json().get('content'));
+        print('>>>>resp', resp.json().get('content'))
         resp.raise_for_status()
         return resp.json().get('content')
 
@@ -206,15 +206,24 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
     remote_resp = await _post_remote_api(payload)
 
     # 5) Update local sample.order_id from remote response
+    # Prefer explicit order id fields from remote, fallback only if necessary.
     remote_code = None
     try:
         remote_code_list = remote_resp.get("other_code_list")
         if isinstance(remote_code_list, list) and remote_code_list:
             remote_code = remote_code_list[0]
     except Exception:
-        pass
-    order_id = remote_resp.get("other_code_list")[0];
-    print('>>>>remote_code', remote_code, db_sample.code);
+        remote_code = None
+
+    # Extract potential order id from common keys
+    order_id_val = remote_resp.get(id)
+    # for k in ("order_id", "id", "orderId"):
+    #     v = remote_resp.get(k)
+    #     if v is not None:
+    #         order_id_val = v
+    #         break
+
+    print('>>>>remote_code/order_id_src', remote_code, order_id_val, remote_resp)
     try:
         if db_sample:
             if remote_code and db_sample.code != remote_code:
@@ -222,22 +231,23 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
                 target = db.query(Sample).filter(Sample.code == remote_code).first()
             else:
                 target = db_sample
-            print('>>>>target', target, order_id);
-            if target is not None and order_id is not None:
+            print('>>>>target before update', target, order_id_val)
+            if target is not None and order_id_val is not None:
                 try:
-                    target.order_id = int(order_id)
-                except Exception:
+                    target.order_id = int(order_id_val)
+                except Exception as _:
                     target.order_id = None
                 db.commit()
                 db.refresh(target)
-    except Exception:
+                print('>>>>target after update', target.order_id)
+    except Exception as e:
         # Avoid failing the endpoint if update fails
-        pass
+        print('>>>>update sample.order_id failed:', repr(e))
 
     return JSONResponse(
         content={
             "message": "success",
-            "data": {"remote": remote_resp, "local_sample_id": db_sample.sample_id if db_sample else None},
+            "data": remote_resp,
         },
         status_code=200,
     )
