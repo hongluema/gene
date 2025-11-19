@@ -29,6 +29,7 @@ def create_sample(db: Session, sample: SampleCreate) -> Sample:
         program_id=sample.program_id,
         org_id=sample.org_id,
         sample_data_id=sample.sample_data_id,
+        sample_data_name=sample.sample_data_name,
         order_id=sample.order_id,
         desc=sample.desc,
     )
@@ -98,6 +99,8 @@ def update_sample(db: Session, sample_id: int, sample: SampleUpdate) -> Sample |
         db_sample.org_id = sample.org_id
     if sample.sample_data_id is not None:
         db_sample.sample_data_id = sample.sample_data_id
+    if sample.sample_data_name is not None:
+        db_sample.sample_data_name = sample.sample_data_name
     if sample.order_id is not None:
         db_sample.order_id = sample.order_id
     if sample.desc is not None:

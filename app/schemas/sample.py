@@ -18,6 +18,7 @@ class SampleBase(BaseModel):
     program_id: int
     org_id: int
     sample_data_id: int | None = None
+    sample_data_name: StrictStr | None = None
     order_id: int | None = None
     desc: StrictStr | None = None
 
@@ -39,6 +40,7 @@ class SampleUpdate(BaseModel):
     program_id: int | None = None
     org_id: int | None = None
     sample_data_id: int | None = None
+    sample_data_name: StrictStr | None = None
     order_id: int | None = None
     desc: StrictStr | None = None
 

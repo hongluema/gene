@@ -21,6 +21,7 @@ class Sample(Base):
     program_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     org_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     sample_data_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
+    sample_data_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     order_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
     desc: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"), nullable=False)

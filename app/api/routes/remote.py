@@ -290,10 +290,14 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
                                 target.sample_data_id = int(sample_data_id)
                             except Exception:
                                 target.sample_data_id = None
+                            # also persist the pdf item name into sample_data_name
+                            sample_data_name = (item or {}).get('name')
+                            if isinstance(sample_data_name, str) and sample_data_name:
+                                target.sample_data_name = sample_data_name
                             db.commit()
                             db.refresh(target)
                             updated_any = True
-                            print('>>>>updated sample_data_id', barcode, target.sample_data_id)
+                            print('>>>>updated sample_data_id/name', barcode, target.sample_data_id, target.sample_data_name)
                         except Exception as _:
                             # continue on item-level errors
                             continue
