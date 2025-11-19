@@ -2,7 +2,7 @@ from pathlib import Path
 import asyncio
 from typing import Any
 
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 import httpx
 from fastapi import APIRouter, HTTPException, Depends, Query, Response
 from app.common.decorators import log_exceptions
@@ -129,15 +129,30 @@ async def _fetch_pdf_list(order_id: int | str) -> list[dict]:
         return content if isinstance(content, list) else []
 
 async def _download_pdf_file(pk: int | str) -> httpx.Response:
-    async with httpx.AsyncClient(timeout=None) as client:
+    async with httpx.AsyncClient(timeout=None, follow_redirects=True) as client:
         headers = {
-            "accept": "*/*",
+            "accept": "application/pdf,application/octet-stream,*/*",
             "Authorization": f"Bearer {REMOTE_TOKEN}",
         }
         url = f"{BASE_API}/api/pdf/download?pk={pk}"
+        # Stream the response to avoid buffering and preserve binary integrity
         resp = await client.post(url, headers=headers)
-        # do not raise for status immediately to allow forwarding error bodies
         return resp
+
+
+async def _download_text_stream(pk: int | str):
+    """下载文本数据流并流式返回"""
+    async with httpx.AsyncClient(timeout=None, follow_redirects=True) as client:
+        headers = {
+            "accept": "text/plain,text/html,text/*,*/*",
+            "Authorization": f"Bearer {REMOTE_TOKEN}",
+        }
+        url = f"{BASE_API}/api/pdf/download?pk={pk}"
+        async with client.stream("POST", url, headers=headers) as resp:
+            resp.raise_for_status()
+            # 流式读取文本数据
+            async for chunk in resp.aiter_text():
+                yield chunk
 
 # get请求获取projects，api是 /api/p/list
 @router.get("/projects")
@@ -334,12 +349,17 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
 @router.get("/report/pdf")
 @log_exceptions
 async def get_report_pdf(pk: str = Query(..., description="sample_data_id from remote")):
-    resp = await _download_pdf_file(pk)
-    # propagate status code and content-type; forward content as-is
-    media_type = resp.headers.get("Content-Type", "application/octet-stream")
-    headers = {}
-    # forward Content-Disposition if present so browser can keep filename
-    cd = resp.headers.get("Content-Disposition")
-    if cd:
-        headers["Content-Disposition"] = cd
-    return Response(content=resp.content, media_type=media_type, status_code=resp.status_code, headers=headers)
+    """接收外部接口的文本数据流，同时返回文本数据流"""
+    try:
+        # 流式传输文本数据
+        return StreamingResponse(
+            _download_text_stream(pk),
+            media_type="text/plain",
+            headers={
+                "Content-Type": "text/plain; charset=utf-8",
+            }
+        )
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=f"Remote API error: {e}")
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=502, detail=f"Failed to connect to remote API: {e}")
