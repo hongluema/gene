@@ -8,6 +8,11 @@ from app.common.decorators import log_exceptions
 from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.models.sample import Sample
+from app.models import User
+from app.crud import sample as crud_sample
+from app.schemas.sample import SampleCreate
+from app.crud import user as crud_user
+from app.schemas.user import UserCreate
 
 try:
     from app.core.constants import REMOTE_TOKEN
@@ -148,33 +153,90 @@ async def _post_remote_api(payload: dict) -> dict:
 @log_exceptions
 async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
     samples = payload.get("samples") if isinstance(payload, dict) else None
-    first = samples[0] if isinstance(samples[0], dict) else None
-    print('>>>>first', first);
-    # Forward to remote API
+    first = samples[0] if isinstance(samples, list) and samples and isinstance(samples[0], dict) else None
+
+    # 1) Map payload -> local Sample fields
+    customer = payload.get("customer") if isinstance(payload, dict) else None
+    code = (first or {}).get("other_code")
+    name = (customer or {}).get("name")
+    sex = (customer or {}).get("sex")  # male/female
+    phone = (customer or {}).get("phone")
+    id_number = (customer or {}).get("id_number")
+    programs = (first or {}).get("programs") or []
+    program_id = int(programs[0]) if programs else 0
+    try:
+        org_id = int(payload.get("org_id")) if payload.get("org_id") is not None else 0
+    except Exception:
+        org_id = 0
+    desc = (first or {}).get("remarks")
+    user_id = (customer or {}).get("user_id")
+    # 2) TODO: Ensure user exists (by phone), else create a minimal user 
+    # user_obj = None
+    # if phone:
+    #     user_obj = db.query(User).filter(User.phone == phone).first()
+    # if not user_obj:
+    #     # Create a basic user to satisfy Sample.user_id FK-like link
+    #     uc = UserCreate(name=(customer or {}).get("name"), avatar="", phone=phone, id_number=id_number, sex=sex, age=None)  # type: ignore[arg-type]
+    #     user_obj = crud_user.create_user(db, user=uc)
+
+    # 3) Create or reuse local Sample by code
+    db_sample = None
+    if code:
+        db_sample = db.query(Sample).filter(Sample.code == code).first()
+    if not db_sample:
+        sc = SampleCreate(
+            code=code or "",
+            name=name,
+            type="fullBlood",
+            process="progressing",
+            user_id=user_id,
+            phone=phone,
+            id_number=id_number,
+            gender=sex,
+            age=None,
+            program_id=program_id,
+            org_id=org_id,
+            sample_data_id=None,
+            order_id=None,
+            desc=desc,
+        )
+        db_sample = crud_sample.create_sample(db, sample=sc)
+
+    # 4) Forward to remote API
     remote_resp = await _post_remote_api(payload)
 
-    # Extract id from remote response
-    remote_id = remote_resp.get('other_code_list')[0];
-    order_id = remote_resp.get('order_id');
-    print('>>>>remote_id', remote_id, payload);
+    # 5) Update local sample.order_id from remote response
+    remote_code = None
     try:
-        db_sample = db.query(Sample).filter(Sample.code == remote_id).first()
-        if db_sample and remote_id is not None:
-            try:
-                db_sample.order_id = int(order_id)
-            except Exception:
-                # keep as None if not castable
-                db_sample.order_id = None
-            db.commit()
-            db.refresh(db_sample)
+        remote_code_list = remote_resp.get("other_code_list")
+        if isinstance(remote_code_list, list) and remote_code_list:
+            remote_code = remote_code_list[0]
     except Exception:
-        # Swallow mapping errors; still return remote response
+        pass
+    order_id = remote_resp.get("order_id")
+
+    try:
+        if db_sample:
+            if remote_code and db_sample.code != remote_code:
+                # In case remote assigned/echoed a different code, try match and update that row
+                target = db.query(Sample).filter(Sample.code == remote_code).first()
+            else:
+                target = db_sample
+            if target is not None and order_id is not None:
+                try:
+                    target.order_id = int(order_id)
+                except Exception:
+                    target.order_id = None
+                db.commit()
+                db.refresh(target)
+    except Exception:
+        # Avoid failing the endpoint if update fails
         pass
 
     return JSONResponse(
         content={
             "message": "success",
-            "data": remote_resp,
+            "data": {"remote": remote_resp, "local_sample_id": db_sample.sample_id if db_sample else None},
         },
         status_code=200,
     )

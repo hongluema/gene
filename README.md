@@ -96,7 +96,7 @@ docker run --name gene-mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=gene_
 ### 3) 启动服务
 
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload
 ```
 
 - Swagger UI: http://127.0.0.1:8000/docs
