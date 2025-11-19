@@ -4,7 +4,7 @@ from typing import Any
 
 from fastapi.responses import JSONResponse
 import httpx
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query, Response
 from app.common.decorators import log_exceptions
 from sqlalchemy.orm import Session
 from app.api.deps import get_db
@@ -127,6 +127,17 @@ async def _fetch_pdf_list(order_id: int | str) -> list[dict]:
         print('>>>>pdf_list_resp_body', data.get('status_code'), data.get('message'))
         content = data.get('content')
         return content if isinstance(content, list) else []
+
+async def _download_pdf_file(pk: int | str) -> httpx.Response:
+    async with httpx.AsyncClient(timeout=None) as client:
+        headers = {
+            "accept": "*/*",
+            "Authorization": f"Bearer {REMOTE_TOKEN}",
+        }
+        url = f"{BASE_API}/api/pdf/download?pk={pk}"
+        resp = await client.post(url, headers=headers)
+        # do not raise for status immediately to allow forwarding error bodies
+        return resp
 
 # get请求获取projects，api是 /api/p/list
 @router.get("/projects")
@@ -318,3 +329,17 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
         },
         status_code=200,
     )
+
+
+@router.get("/report/pdf")
+@log_exceptions
+async def get_report_pdf(pk: str = Query(..., description="sample_data_id from remote")):
+    resp = await _download_pdf_file(pk)
+    # propagate status code and content-type; forward content as-is
+    media_type = resp.headers.get("Content-Type", "application/octet-stream")
+    headers = {}
+    # forward Content-Disposition if present so browser can keep filename
+    cd = resp.headers.get("Content-Disposition")
+    if cd:
+        headers["Content-Disposition"] = cd
+    return Response(content=resp.content, media_type=media_type, status_code=resp.status_code, headers=headers)
