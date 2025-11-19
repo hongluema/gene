@@ -30,10 +30,10 @@ def create_sample(payload: SampleCreate, db: Session = Depends(get_db)):
     return sample
 
 
-@router.get("/phone/{phone}", response_model=list[SampleRead])
+@router.get("/phone", response_model=list[SampleRead])
 @log_exceptions
 def get_samples_by_phone(
-    phone: str,
+    phone: str = Query(..., description="手机号"),
     db: Session = Depends(get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
@@ -42,10 +42,10 @@ def get_samples_by_phone(
     return samples
 
 
-@router.get("/id-number/{id_number}", response_model=list[SampleRead])
+@router.get("/id-number", response_model=list[SampleRead])
 @log_exceptions
 def get_samples_by_id_number(
-    id_number: str,
+    id_number: str = Query(..., description="身份证号"),
     db: Session = Depends(get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
