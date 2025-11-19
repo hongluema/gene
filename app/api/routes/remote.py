@@ -1,6 +1,7 @@
 from pathlib import Path
 import asyncio
 from typing import Any
+from urllib.parse import quote
 
 from fastapi.responses import JSONResponse, StreamingResponse
 import httpx
@@ -351,13 +352,21 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
 async def get_report_pdf(pk: str = Query(..., description="sample_data_id from remote")):
     """接收外部接口的二进制数据流（PDF），同时返回二进制数据流"""
     try:
+        # 设置中文文件名，使用 RFC 5987 格式支持中文
+        # 注意：HTTP 头必须使用 latin-1 编码，所以使用 filename* 参数
+        filename = "样本.pdf"
+        # URL 编码文件名（UTF-8），quote 默认使用 UTF-8 编码
+        encoded_filename = quote(filename)
+        # 只使用 filename* 参数，避免 latin-1 编码问题
+        content_disposition = f'attachment; filename*=UTF-8\'\'{encoded_filename}'
+        
         # 流式传输二进制数据（PDF）
         return StreamingResponse(
             _download_binary_stream(pk),
             media_type="application/pdf",
             headers={
                 "Content-Type": "application/pdf",
-                "Content-Disposition": f"inline; filename=report_{pk}.pdf",
+                "Content-Disposition": content_disposition,
             }
         )
     except httpx.HTTPStatusError as e:
