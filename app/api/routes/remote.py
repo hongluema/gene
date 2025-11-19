@@ -213,8 +213,8 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
             remote_code = remote_code_list[0]
     except Exception:
         pass
-    order_id = remote_resp.get("order_id")
-
+    order_id = remote_resp.get("other_code_list")[0];
+    print('>>>>remote_code', remote_code, db_sample.code);
     try:
         if db_sample:
             if remote_code and db_sample.code != remote_code:
@@ -222,6 +222,7 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
                 target = db.query(Sample).filter(Sample.code == remote_code).first()
             else:
                 target = db_sample
+            print('>>>>target', target, order_id);
             if target is not None and order_id is not None:
                 try:
                     target.order_id = int(order_id)
