@@ -3,10 +3,16 @@ from typing import Any
 
 from fastapi.responses import JSONResponse
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from app.common.decorators import log_exceptions
+from sqlalchemy.orm import Session
+from app.api.deps import get_db
+from app.models.sample import Sample
 
-from app.core.constants import REMOTE_TOKEN
+try:
+    from app.core.constants import REMOTE_TOKEN
+except Exception:
+    REMOTE_TOKEN = ""
 
 
 router = APIRouter()
@@ -107,5 +113,73 @@ async def get_projects():
     print('>>>>projects', );
     return JSONResponse(
         content={"message": "success", "data": {"list": data, "total": 100}},
+        status_code=200,
+    )
+
+
+async def _post_remote_api(payload: dict) -> dict:
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        headers = {
+            "accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {REMOTE_TOKEN}",
+        }
+        resp = await client.post(f"{BASE_API}/api", headers=headers, json=payload)
+        print('>>>>resp', resp.json());
+        resp.raise_for_status()
+        return resp.json()
+
+
+def _extract_remote_id(data: dict[str, Any]) -> Any:
+    # Try common locations for an identifier
+    # # for key in ("id", "order_id"):
+    # #     if key in data:
+    # #         return data[key]
+    content = data.get("content") if isinstance(data, dict) else None
+    if isinstance(content, dict):
+        for key in ("id", "order_id"):
+            if key in content:
+                return content[key]
+    return None
+
+
+@router.post("/sample/create")
+@log_exceptions
+async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
+    # Forward to remote API
+    remote_resp = await _post_remote_api(payload)
+
+    # Extract id from remote response
+    remote_id = _extract_remote_id(remote_resp)
+    print('>>>>remote_id', remote_id, payload);
+    # Try to map back to local sample via provided samples[0].other_code (fallback to code)
+    updated_sample_id: int | None = None
+    try:
+        samples = payload.get("samples") if isinstance(payload, dict) else None
+        if isinstance(samples, list) and samples:
+            first = samples[0] if isinstance(samples[0], dict) else None
+            print('>>>>first', first);
+            if first:
+                local_code = first.get("other_code") or first.get("code")
+                if local_code:
+                    db_sample = db.query(Sample).filter(Sample.code == local_code).first()
+                    if db_sample and remote_id is not None:
+                        try:
+                            db_sample.order_id = int(remote_id)
+                        except Exception:
+                            # keep as None if not castable
+                            db_sample.order_id = None
+                        db.commit()
+                        db.refresh(db_sample)
+                        updated_sample_id = db_sample.sample_id
+    except Exception:
+        # Swallow mapping errors; still return remote response
+        pass
+
+    return JSONResponse(
+        content={
+            "message": "success",
+            "data": {"remote": remote_resp, "order_id": remote_id, "updated_sample_id": updated_sample_id},
+        },
         status_code=200,
     )
