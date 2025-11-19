@@ -147,29 +147,26 @@ async def _post_remote_api(payload: dict) -> dict:
 @router.post("/sample/create")
 @log_exceptions
 async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
+    samples = payload.get("samples") if isinstance(payload, dict) else None
+    first = samples[0] if isinstance(samples[0], dict) else None
+    print('>>>>first', first);
     # Forward to remote API
     remote_resp = await _post_remote_api(payload)
 
     # Extract id from remote response
     remote_id = remote_resp.get('other_code_list')[0];
+    order_id = remote_resp.get('order_id');
     print('>>>>remote_id', remote_id, payload);
     try:
-        samples = payload.get("samples") if isinstance(payload, dict) else None
-        if isinstance(samples, list) and samples:
-            first = samples[0] if isinstance(samples[0], dict) else None
-            print('>>>>first', first);
-            if first:
-                local_code = first.get("other_code") or first.get("code")
-                if local_code:
-                    db_sample = db.query(Sample).filter(Sample.code == local_code).first()
-                    if db_sample and remote_id is not None:
-                        try:
-                            db_sample.order_id = int(remote_id)
-                        except Exception:
-                            # keep as None if not castable
-                            db_sample.order_id = None
-                        db.commit()
-                        db.refresh(db_sample)
+        db_sample = db.query(Sample).filter(Sample.code == remote_id).first()
+        if db_sample and remote_id is not None:
+            try:
+                db_sample.order_id = int(order_id)
+            except Exception:
+                # keep as None if not castable
+                db_sample.order_id = None
+            db.commit()
+            db.refresh(db_sample)
     except Exception:
         # Swallow mapping errors; still return remote response
         pass
