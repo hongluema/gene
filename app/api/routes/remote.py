@@ -154,7 +154,7 @@ async def _post_remote_api(payload: dict) -> dict:
 async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
     samples = payload.get("samples") if isinstance(payload, dict) else None
     first = samples[0] if isinstance(samples, list) and samples and isinstance(samples[0], dict) else None
-
+    print('>>>>first', first);
     # 1) Map payload -> local Sample fields
     customer = payload.get("customer") if isinstance(payload, dict) else None
     code = (first or {}).get("other_code")
@@ -182,8 +182,10 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
 
     # 3) Create or reuse local Sample by code
     db_sample = None
+    print('>>>>code', code);
     if code:
         db_sample = db.query(Sample).filter(Sample.code == code).first()
+        print('>>>>code', code, '>', name, '>', user_id, '>', phone, '>', id_number, '>', sex, '>', age, '>', program_id, '>', org_id, '>', desc);
     if not db_sample:
         sc = SampleCreate(
             code=code or "",
@@ -199,10 +201,11 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
             org_id=org_id,
             sample_data_id=None,
             order_id=None,
-            desc=desc,
+            desc=desc or "",
         )
+        print('>>>>sc', sc);
         db_sample = crud_sample.create_sample(db, sample=sc)
-
+    print('>>>>db_sample', db_sample);
     # 4) Forward to remote API
     remote_resp = await _post_remote_api(payload)
 
