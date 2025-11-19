@@ -140,18 +140,18 @@ async def _download_pdf_file(pk: int | str) -> httpx.Response:
         return resp
 
 
-async def _download_text_stream(pk: int | str):
-    """下载文本数据流并流式返回"""
+async def _download_binary_stream(pk: int | str):
+    """下载二进制数据流（PDF）并流式返回"""
     async with httpx.AsyncClient(timeout=None, follow_redirects=True) as client:
         headers = {
-            "accept": "text/plain,text/html,text/*,*/*",
+            "accept": "application/pdf,application/octet-stream,*/*",
             "Authorization": f"Bearer {REMOTE_TOKEN}",
         }
         url = f"{BASE_API}/api/pdf/download?pk={pk}"
         async with client.stream("POST", url, headers=headers) as resp:
             resp.raise_for_status()
-            # 流式读取文本数据
-            async for chunk in resp.aiter_text():
+            # 流式读取二进制数据
+            async for chunk in resp.aiter_bytes():
                 yield chunk
 
 # get请求获取projects，api是 /api/p/list
@@ -349,14 +349,15 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
 @router.get("/report/pdf")
 @log_exceptions
 async def get_report_pdf(pk: str = Query(..., description="sample_data_id from remote")):
-    """接收外部接口的文本数据流，同时返回文本数据流"""
+    """接收外部接口的二进制数据流（PDF），同时返回二进制数据流"""
     try:
-        # 流式传输文本数据
+        # 流式传输二进制数据（PDF）
         return StreamingResponse(
-            _download_text_stream(pk),
-            media_type="text/plain",
+            _download_binary_stream(pk),
+            media_type="application/pdf",
             headers={
-                "Content-Type": "text/plain; charset=utf-8",
+                "Content-Type": "application/pdf",
+                "Content-Disposition": f"inline; filename=report_{pk}.pdf",
             }
         )
     except httpx.HTTPStatusError as e:
