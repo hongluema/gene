@@ -1,4 +1,5 @@
 from pathlib import Path
+import asyncio
 from typing import Any
 
 from fastapi.responses import JSONResponse
@@ -108,6 +109,24 @@ async def _fetch_projects() -> dict:
         resp = await client.post(f"{BASE_API}/api/p/list", headers=headers, json=payload)
         resp.raise_for_status()
         return resp.json()
+
+async def _fetch_pdf_list(order_id: int | str) -> list[dict]:
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        headers = {
+            "accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {REMOTE_TOKEN}",
+        }
+        url = f"{BASE_API}/api/pdf/list?pk={order_id}"
+        # TODO: 测试用
+        # url = f"{BASE_API}/api/pdf/list?pk=375760112050114560"
+        resp = await client.post(url, headers=headers)
+        print('>>>>pdf_list_resp_status', resp.status_code)
+        resp.raise_for_status()
+        data = resp.json()
+        print('>>>>pdf_list_resp_body', data.get('status_code'), data.get('message'))
+        content = data.get('content')
+        return content if isinstance(content, list) else []
 
 # get请求获取projects，api是 /api/p/list
 @router.get("/projects")
@@ -242,6 +261,51 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
     except Exception as e:
         # Avoid failing the endpoint if update fails
         print('>>>>update sample.order_id failed:', repr(e))
+
+    # 6) With order_id, fetch pdf list and update sample_data_id by barcode (simple retry)
+    max_retries = 3
+    delay_seconds = 2
+    try:
+        if order_id_val is not None:
+            for attempt in range(1, max_retries + 1):
+                try:
+                    pdf_items = await _fetch_pdf_list(order_id_val)
+                except Exception as fetch_err:
+                    print(f'>>>>pdf_list fetch error attempt {attempt}:', repr(fetch_err))
+                    pdf_items = []
+
+                print('>>>>pdf_items_len', len(pdf_items) if isinstance(pdf_items, list) else None, 'attempt', attempt)
+                updated_any = False
+                if isinstance(pdf_items, list) and pdf_items:
+                    for item in pdf_items:
+                        try:
+                            barcode = (item or {}).get('barcode')
+                            sample_data_id = (item or {}).get('sample_data_id')
+                            if not barcode or sample_data_id is None:
+                                continue
+                            target = db.query(Sample).filter(Sample.code == barcode).first()
+                            if not target:
+                                continue
+                            try:
+                                target.sample_data_id = int(sample_data_id)
+                            except Exception:
+                                target.sample_data_id = None
+                            db.commit()
+                            db.refresh(target)
+                            updated_any = True
+                            print('>>>>updated sample_data_id', barcode, target.sample_data_id)
+                        except Exception as _:
+                            # continue on item-level errors
+                            continue
+
+                if updated_any:
+                    break
+                if attempt < max_retries:
+                    await asyncio.sleep(delay_seconds)
+            else:
+                print('>>>>pdf list retry exhausted without updates')
+    except Exception as e:
+        print('>>>>fetch/update pdf list failed:', repr(e))
 
     return JSONResponse(
         content={
