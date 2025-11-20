@@ -41,3 +41,6 @@ app.include_router(api_router, prefix="/api")
 @app.get("/api/health", tags=["health"])  # Prefixed health endpoint
 def health():
     return {"status": "ok"}
+@app.get("/.well-known/acme-challenge/{pk}", tags=["ssl test"])  # Prefixed health endpoint
+def acme():
+    return {"status": "ok"}
