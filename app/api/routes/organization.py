@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
-from app.models.organization import Organization
-from app.schemas.organization import OrganizationCreate, OrganizationRead, OrganizationUpdate
-from app.crud import organization as crud_organization
-from app.common.decorators import log_exceptions
+from api.deps import get_db
+from models.organization import Organization
+from schemas.organization import OrganizationCreate, OrganizationRead, OrganizationUpdate
+from crud import organization as crud_organization
+from common.decorators import log_exceptions
 
 
 router = APIRouter()

@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 
 # MySQL 连接 URL 格式：
 # mysql+pymysql://用户名:密码@主机地址:端口号/数据库名?charset=utf8mb4
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://walry:arApp123qwe..@117.149.9.79:33060/applet_wy?charset=utf8mb4"
+SQLALCHEMY_DATABASE_URL = "mysql+pymysql://walry:arApp123qwe..@10.110.1.22:33060/applet_wy?charset=utf8mb4"
 
 # 创建数据库引擎（echo=True 会打印 SQL 语句，调试用）
 engine = create_engine(

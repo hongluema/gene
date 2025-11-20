@@ -2,7 +2,7 @@ from datetime import datetime
 from sqlalchemy import BigInteger, String, TIMESTAMP, text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import Base
+from db.base import Base
 
 
 class Organization(Base):

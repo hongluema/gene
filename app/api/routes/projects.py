@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
-from app.models.projects import Project
-from app.schemas.projects import ProjectCreate, ProjectRead, ProjectUpdate
-from app.crud import projects as crud_project
-from app.common.decorators import log_exceptions
+from api.deps import get_db
+from models.projects import Project
+from schemas.projects import ProjectCreate, ProjectRead, ProjectUpdate
+from crud import projects as crud_project
+from common.decorators import log_exceptions
 
 
 router = APIRouter()

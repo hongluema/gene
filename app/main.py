@@ -1,12 +1,12 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-from app.middleware.response_wrapper import UnifiedResponseMiddleware
+from middleware.response_wrapper import UnifiedResponseMiddleware
 
-from app.core.config import settings
-from app.core.logging_config import setup_logging
-from app.api.routes import api_router
-from app.db.base import SessionLocal, engine, Base
+from core.config import settings
+from core.logging_config import setup_logging
+from api.routes import api_router
+from db.base import SessionLocal, engine, Base
 
 
 @asynccontextmanager

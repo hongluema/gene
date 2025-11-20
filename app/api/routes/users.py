@@ -3,13 +3,13 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
-from app.models import User
-from app.schemas.user import UserCreate, UserRead, UserUpdate
-from app.crud import user as crud_user
+from api.deps import get_db
+from models import User
+from schemas.user import UserCreate, UserRead, UserUpdate
+from crud import user as crud_user
 
 
-from app.common.decorators import log_exceptions
+from common.decorators import log_exceptions
 
 
 router = APIRouter()

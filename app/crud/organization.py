@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.models.organization import Organization
-from app.schemas.organization import OrganizationCreate, OrganizationUpdate
+from models.organization import Organization
+from schemas.organization import OrganizationCreate, OrganizationUpdate
 
 
 def create_organization(db: Session, organization: OrganizationCreate) -> Organization:

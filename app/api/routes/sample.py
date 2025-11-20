@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
-from app.models.sample import Sample
-from app.schemas.sample import SampleCreate, SampleRead, SampleUpdate
-from app.crud import sample as crud_sample
-from app.common.decorators import log_exceptions
+from api.deps import get_db
+from models.sample import Sample
+from schemas.sample import SampleCreate, SampleRead, SampleUpdate
+from crud import sample as crud_sample
+from common.decorators import log_exceptions
 
 
 router = APIRouter()

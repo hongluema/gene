@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.models.projects import Project
-from app.schemas.projects import ProjectCreate, ProjectUpdate
+from models.projects import Project
+from schemas.projects import ProjectCreate, ProjectUpdate
 import random
 import string
 

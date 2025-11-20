@@ -6,18 +6,18 @@ from urllib.parse import quote
 from fastapi.responses import JSONResponse, StreamingResponse
 import httpx
 from fastapi import APIRouter, HTTPException, Depends, Query, Response
-from app.common.decorators import log_exceptions
+from common.decorators import log_exceptions
 from sqlalchemy.orm import Session
-from app.api.deps import get_db
-from app.models.sample import Sample
-from app.models import User
-from app.crud import sample as crud_sample
-from app.schemas.sample import SampleCreate
-from app.crud import user as crud_user
-from app.schemas.user import UserCreate
+from api.deps import get_db
+from models.sample import Sample
+from models import User
+from crud import sample as crud_sample
+from schemas.sample import SampleCreate
+from crud import user as crud_user
+from schemas.user import UserCreate
 
 try:
-    from app.core.constants import REMOTE_TOKEN
+    from core.constants import REMOTE_TOKEN
 except Exception:
     REMOTE_TOKEN = ""
 

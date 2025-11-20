@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.models.sample import Sample
-from app.schemas.sample import SampleCreate, SampleUpdate
+from models.sample import Sample
+from schemas.sample import SampleCreate, SampleUpdate
 import random
 import string
 
