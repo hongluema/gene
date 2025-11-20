@@ -1,3 +1,9 @@
+import sys
+from pathlib import Path
+
+# 将 app 目录添加到 Python 路径，允许直接导入模块
+sys.path.insert(0, str(Path(__file__).parent))
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
