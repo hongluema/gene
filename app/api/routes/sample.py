@@ -15,11 +15,15 @@ router = APIRouter()
 @router.get("/", response_model=list[SampleRead])
 @log_exceptions
 def list_samples(
+    user_id: str | None = Query(None, description="用户ID"),
     db: Session = Depends(get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
 ):
-    stmt = select(Sample).order_by(Sample.created_at.desc()).offset(skip).limit(limit)
+    if user_id:
+        stmt = select(Sample).where(Sample.user_id == user_id).order_by(Sample.created_at.desc()).offset(skip).limit(limit)
+    else:
+        stmt = select(Sample).order_by(Sample.created_at.desc()).offset(skip).limit(limit)
     return list(db.scalars(stmt))
 
 
