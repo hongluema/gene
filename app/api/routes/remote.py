@@ -1,5 +1,6 @@
 from pathlib import Path
 import asyncio
+import base64
 from typing import Any
 from urllib.parse import quote
 
@@ -25,8 +26,10 @@ except Exception:
 router = APIRouter()
 
 
-# BASE_API = "http://117.149.9.79:9003"
-BASE_API = "http://10.110.1.22:9003"
+# TODO：正式环境
+# BASE_API = "http://10.110.1.22:9003"
+# TODO：开发环境
+BASE_API = "http://117.149.9.79:9003"
 
 AUTH_URL = f"{BASE_API}/auth/token"
 AUTH_HEADERS = {
@@ -374,3 +377,56 @@ async def get_report_pdf(pk: str = Query(..., description="sample_data_id from r
         raise HTTPException(status_code=e.response.status_code, detail=f"Remote API error: {e}")
     except httpx.RequestError as e:
         raise HTTPException(status_code=502, detail=f"Failed to connect to remote API: {e}")
+
+
+@router.get("/report/pdf/download")
+@router.post("/report/pdf/download")
+@log_exceptions
+async def download_pdf_to_local(pk: str = Query(..., description="sample_data_id from remote")):
+    """下载远程 PDF 文件到本地 static 目录，使用 pk 作为文件名"""
+    try:
+        # 确定 static 目录路径（相对于 remote.py 文件：app/api/routes/remote.py -> 项目根目录/static）
+        static_dir = Path(__file__).resolve().parents[3] / "app/static"
+        static_dir.mkdir(parents=True, exist_ok=True)
+        
+        # 使用 pk 作为文件名，添加 .pdf 扩展名
+        file_path = static_dir / f"{pk}.pdf"
+        
+        # 如果文件已存在，可以选择跳过或覆盖（这里选择覆盖）
+        print(f'>>>>downloading PDF to: {file_path}')
+        
+        # 下载 PDF 数据
+        pdf_data = b""
+        async for chunk in _download_binary_stream(pk):
+            pdf_data += chunk
+        
+        if not pdf_data:
+            raise HTTPException(status_code=404, detail="PDF file is empty or not found")
+        
+        # 保存到本地文件
+        file_path.write_bytes(pdf_data)
+        
+        print(f'>>>>PDF saved successfully: {file_path}, size: {len(pdf_data)} bytes')
+        
+        return JSONResponse(
+            content={
+                "message": "success",
+                "data": {
+                    "pk": pk,
+                    "file_path": str(file_path),
+                    "file_name": f"{pk}.pdf",
+                    "size": len(pdf_data),
+                },
+            },
+            status_code=200,
+        )
+    except httpx.HTTPStatusError as e:
+        error_detail = f"Remote API error: {e}"
+        print(f'>>>>download_pdf_to_local HTTPStatusError: {error_detail}')
+        raise HTTPException(status_code=e.response.status_code if e.response else 500, detail=error_detail)
+    except httpx.RequestError as e:
+        print(f'>>>>download_pdf_to_local RequestError: {e}')
+        raise HTTPException(status_code=502, detail=f"Failed to connect to remote API: {e}")
+    except Exception as e:
+        print(f'>>>>download_pdf_to_local Exception: {repr(e)}')
+        raise HTTPException(status_code=500, detail=f"Failed to save PDF file: {e}")
