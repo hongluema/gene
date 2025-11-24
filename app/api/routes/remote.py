@@ -123,9 +123,9 @@ async def _fetch_pdf_list(order_id: int | str) -> list[dict]:
             "Content-Type": "application/json",
             "Authorization": f"Bearer {REMOTE_TOKEN}",
         }
-        # url = f"{BASE_API}/api/pdf/list?pk={order_id}"
+        url = f"{BASE_API}/api/pdf/list?pk={order_id}"
         # TODO: 测试用
-        url = f"{BASE_API}/api/pdf/list?pk=375760112050114560"
+        # url = f"{BASE_API}/api/pdf/list?pk=375760112050114560"
         resp = await client.post(url, headers=headers)
         print('>>>>pdf_list_resp_status', resp.status_code)
         resp.raise_for_status()
