@@ -3,6 +3,7 @@ from models.sample import Sample
 from schemas.sample import SampleCreate, SampleUpdate
 import random
 import string
+from datetime import datetime
 
 
 def generate_sample_id(db: Session) -> int:
@@ -32,6 +33,12 @@ def create_sample(db: Session, sample: SampleCreate) -> Sample:
         sample_data_name=sample.sample_data_name,
         order_id=sample.order_id,
         desc=sample.desc,
+        # 新增字段
+        receive_time=sample.receive_time,
+        report_date=sample.report_date,
+        test_user=sample.test_user,
+        see_user=sample.see_user,
+        usable=sample.usable
     )
     db.add(db_sample)
     db.commit()
@@ -105,6 +112,17 @@ def update_sample(db: Session, sample_id: int, sample: SampleUpdate) -> Sample |
         db_sample.order_id = sample.order_id
     if sample.desc is not None:
         db_sample.desc = sample.desc
+    # 新增字段更新
+    if sample.receive_time is not None:
+        db_sample.receive_time = sample.receive_time
+    if sample.report_date is not None:
+        db_sample.report_date = sample.report_date
+    if sample.test_user is not None:
+        db_sample.test_user = sample.test_user
+    if sample.see_user is not None:
+        db_sample.see_user = sample.see_user
+    if sample.usable is not None:
+        db_sample.usable = sample.usable
     db.commit()
     db.refresh(db_sample)
     return db_sample

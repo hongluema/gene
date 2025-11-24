@@ -10,10 +10,10 @@ from db.base import BaseLIMS
 
 class Project(BaseLIMS):
     __tablename__ = "program"
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=False, autoincrement='auto')
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement='auto')
     name: Mapped[str] = mapped_column(String(100), nullable=True)
     code: Mapped[str] = mapped_column(String(100), nullable=True)
-    usable: Mapped[int] = mapped_column(Integer, nullable=True, server_default=1)
+    usable: Mapped[int] = mapped_column(Integer, nullable=True, server_default=text('1'))
     desc: Mapped[str | None] = mapped_column(String(500), nullable=True)
     create_time: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"), nullable=False)
     updated_time: Mapped[datetime] = mapped_column(
