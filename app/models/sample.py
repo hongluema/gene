@@ -28,8 +28,8 @@ class Sample(Base):
     updated_at: Mapped[datetime] = mapped_column(
         TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"), nullable=False, onupdate=text("CURRENT_TIMESTAMP")
     )
-    receive_time: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False)
-    report_date: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False)
+    receive_time: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=True)
+    report_date: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=True)
     test_user: Mapped[str | None] = mapped_column(String(100), nullable=True)
     see_user: Mapped[str | None] = mapped_column(String(100), nullable=True)
     usable: Mapped[int] = mapped_column(Integer, nullable=True, server_default=text('1'))

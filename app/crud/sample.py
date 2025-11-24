@@ -33,7 +33,7 @@ def create_sample(db: Session, sample: SampleCreate) -> Sample:
         sample_data_name=sample.sample_data_name,
         order_id=sample.order_id,
         desc=sample.desc,
-        # 新增字段
+        # 新增字段，如果未提供则设为None
         receive_time=sample.receive_time,
         report_date=sample.report_date,
         test_user=sample.test_user,

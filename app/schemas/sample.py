@@ -21,15 +21,9 @@ class SampleBase(BaseModel):
     sample_data_name: StrictStr | None = None
     order_id: int | None = None
     desc: StrictStr | None = None
-    # 新增字段
+    # 新增字段，设为可选
     receive_time: datetime | None = None
     report_date: datetime | None = None
-    test_user: StrictStr | None = None
-    see_user: StrictStr | None = None
-    usable: int | None = None
-    # 新增字段
-    receive_time: datetime
-    report_date: datetime
     test_user: StrictStr | None = None
     see_user: StrictStr | None = None
     usable: int | None = None
@@ -55,6 +49,12 @@ class SampleUpdate(BaseModel):
     sample_data_name: StrictStr | None = None
     order_id: int | None = None
     desc: StrictStr | None = None
+    # 新增字段
+    receive_time: datetime | None = None
+    report_date: datetime | None = None
+    test_user: StrictStr | None = None
+    see_user: StrictStr | None = None
+    usable: int | None = None
 
 
 class SampleRead(SampleBase):
