@@ -7,9 +7,10 @@ from urllib.parse import quote
 from fastapi.responses import JSONResponse, StreamingResponse
 import httpx
 from fastapi import APIRouter, HTTPException, Depends, Query, Response
+from sqlalchemy import text
 from common.decorators import log_exceptions
 from sqlalchemy.orm import Session
-from api.deps import get_db
+from api.deps import get_db, get_db_lims
 from models.sample import Sample
 from models import User
 from crud import sample as crud_sample
@@ -162,14 +163,23 @@ async def _download_binary_stream(pk: int | str):
 # get请求获取projects，api是 /api/p/list
 @router.get("/projects")
 @log_exceptions
-async def get_projects():
-    projects = await _fetch_projects()
-    data = projects.get('content').get('rows');
-    print('>>>>projects', );
-    return JSONResponse(
-        content={"message": "success", "data": {"list": data, "total": 100}},
-        status_code=200,
-    )
+async def get_projects(db: Session = Depends(get_db_lims)):
+    sql = text("select * from program where usable = 1")
+    # 2. 执行 SQL，传入参数字典
+    result = db.execute(sql)
+    # 3. 获取结果
+    # result.mappings() 会把结果转换成类似字典的格式 {'id': 1, 'name': 'xxx'}
+    # .all() 获取所有行
+    rows = result.mappings().all()
+    
+    return rows
+    # projects = await _fetch_projects()
+    # data = projects.get('content').get('rows');
+    # print('>>>>projects', );
+    # return JSONResponse(
+    #     content={"message": "success", "data": {"list": data, "total": 100}},
+    #     status_code=200,
+    # )
 
 
 async def _post_remote_api(payload: dict) -> dict:
