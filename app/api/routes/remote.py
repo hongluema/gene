@@ -440,3 +440,45 @@ async def download_pdf_to_local(pk: str = Query(..., description="sample_data_id
     except Exception as e:
         print(f'>>>>download_pdf_to_local Exception: {repr(e)}')
         raise HTTPException(status_code=500, detail=f"Failed to save PDF file: {e}")
+
+
+@router.get("/report/pdf/local")
+@log_exceptions
+async def get_local_pdf(pk: str = Query(..., description="sample_data_id from remote")):
+    """读取本地static目录下的PDF文件并返回"""
+    try:
+        # 确定 static 目录路径
+        static_dir = Path(__file__).resolve().parents[3] / "app/static"
+        file_path = static_dir / f"{pk}.pdf"
+        
+        # 检查文件是否存在
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"PDF file {pk}.pdf not found")
+        
+        # 检查是否为文件（而非目录）
+        if not file_path.is_file():
+            raise HTTPException(status_code=400, detail=f"{pk}.pdf is not a valid file")
+        
+        # 设置中文文件名，使用 RFC 5987 格式支持中文
+        filename = "样本.pdf"
+        encoded_filename = quote(filename)
+        # 修改为 inline，使PDF在浏览器中直接打开而不是下载
+        content_disposition = f'inline; filename*=UTF-8\'\'{encoded_filename}'
+        
+        # 返回文件内容
+        def iterfile():
+            with open(file_path, mode="rb") as file_like:
+                yield from file_like
+                
+        return StreamingResponse(
+            iterfile(),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": content_disposition,
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f'>>>>get_local_pdf Exception: {repr(e)}')
+        raise HTTPException(status_code=500, detail=f"Failed to read PDF file: {e}")
