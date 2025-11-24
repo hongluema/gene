@@ -445,15 +445,20 @@ async def download_pdf_to_local(pk: str = Query(..., description="sample_data_id
 @router.get("/report/pdf/local")
 @log_exceptions
 async def get_local_pdf(pk: str = Query(..., description="sample_data_id from remote")):
-    """读取本地static目录下的PDF文件并返回"""
+    """读取本地static目录下的PDF文件并返回，如果不存在则先从远程下载"""
     try:
         # 确定 static 目录路径
         static_dir = Path(__file__).resolve().parents[3] / "app/static"
         file_path = static_dir / f"{pk}.pdf"
         
-        # 检查文件是否存在
+        # 检查文件是否存在，如果不存在则先下载
         if not file_path.exists():
-            raise HTTPException(status_code=404, detail=f"PDF file {pk}.pdf not found")
+            # 调用内部的下载函数下载PDF文件
+            await download_pdf_to_local(pk=pk)
+            
+            # 再次检查文件是否成功下载
+            if not file_path.exists():
+                raise HTTPException(status_code=500, detail=f"Failed to download PDF file {pk}.pdf")
         
         # 检查是否为文件（而非目录）
         if not file_path.is_file():
@@ -462,7 +467,7 @@ async def get_local_pdf(pk: str = Query(..., description="sample_data_id from re
         # 设置中文文件名，使用 RFC 5987 格式支持中文
         filename = "样本.pdf"
         encoded_filename = quote(filename)
-        # 修改为 inline，使PDF在浏览器中直接打开而不是下载
+        # 使用 inline 使PDF在浏览器中直接打开而不是下载
         content_disposition = f'inline; filename*=UTF-8\'\'{encoded_filename}'
         
         # 返回文件内容
