@@ -186,12 +186,10 @@ PRIMARY KEY (user_id),
 CONSTRAINT users_chk_1 CHECK (age > 0 AND age <= 150)
 )
 
-curl -X POST "http://localhost:8002/api/organizations/" \
+curl -X POST "http://117.149.9.79:9003/api/pdf/list?pk=377639804348796928" \
  -H "Content-Type: application/json" \
- -d '{
-"name": "测试组织",
-"desc": "这是一个测试组织的描述"
-}'
+ -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoieGN4amsiLCJwayI6IjM3MTQxMTg0Mzg4NzAwOTc5MiIsInNjb3BlcyI6IltcIm9yZGVyczpjcmVhdGVcIiwgXCJvcmdfYW5kX2N1c3RvbWVyczpjcmVhdGVcIiwgXCJzYW1wbGU6Y3JlYXRlXCIsIFwic2FtcGxlX2FuZF9wcm9ncmFtOmNyZWF0ZVwiLCBcImFwaXVzZXI6Y3JlYXRlXCIsIFwiYXBpdXNlcjp1cGRhdGVcIiwgXCJhcGl1c2VyOmRlbGV0ZVwiLCBcImFwaXVzZXI6cmV0cmlldmVcIl0iLCJzdXBlciI6MCwiZXhwIjoxNzY0NDA3MjEwfQ.vty8xc2js62YI_6c3wO6vWUhb5htVL-pqRQ_4skRVXs"
+-d '{}'
 
 <!-- 获取token -->
 
