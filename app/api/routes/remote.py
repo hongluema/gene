@@ -1,6 +1,8 @@
 from pathlib import Path
 import asyncio
 import base64
+import importlib
+import sys
 from typing import Any
 from urllib.parse import quote
 
@@ -80,6 +82,50 @@ def _extract_token(data: dict[str, Any]) -> str | None:
     return None
 
 
+async def _refresh_token_and_reload() -> str | None:
+    """刷新 token 并重新加载模块以更新全局 REMOTE_TOKEN"""
+    global REMOTE_TOKEN
+    try:
+        data = await _fetch_token()
+        token = _extract_token(data)
+        if not token:
+            print('>>>>refresh_token: Token not found in auth response')
+            return None
+        _write_token_to_constants(token, raw=data)
+        # 重新加载 core.constants 模块以更新 REMOTE_TOKEN
+        if 'core.constants' in sys.modules:
+            importlib.reload(sys.modules['core.constants'])
+            from core.constants import REMOTE_TOKEN as NEW_TOKEN
+            REMOTE_TOKEN = NEW_TOKEN
+        else:
+            from core.constants import REMOTE_TOKEN as NEW_TOKEN
+            REMOTE_TOKEN = NEW_TOKEN
+        print('>>>>refresh_token: Token refreshed successfully')
+        return token
+    except Exception as e:
+        print(f'>>>>refresh_token failed: {repr(e)}')
+        return None
+
+
+async def _make_request_with_retry(request_func):
+    """执行 HTTP 请求，如果遇到 401 错误则自动刷新 token 并重试一次"""
+    try:
+        return await request_func()
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 401:
+            print('>>>>401 Unauthorized detected, refreshing token...')
+            new_token = await _refresh_token_and_reload()
+            if new_token:
+                print('>>>>Token refreshed, retrying request...')
+                # 重试一次
+                return await request_func()
+            else:
+                print('>>>>Failed to refresh token, raising original error')
+                raise
+        else:
+            raise
+
+
 @router.get("/token")
 @router.post("/token")
 @log_exceptions
@@ -101,64 +147,94 @@ async def get_remote_token():
 
 
 async def _fetch_projects() -> dict:
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        headers = {
-            "accept": "application/json",
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {REMOTE_TOKEN}"
-        }
-        payload = {
-            "pagesize": None,
-            "pagenumber": 1,
-            "query": {}
-        }
-        resp = await client.post(f"{BASE_API}/api/p/list", headers=headers, json=payload)
-        resp.raise_for_status()
-        return resp.json()
+    async def _do_request():
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            headers = {
+                "accept": "application/json",
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {REMOTE_TOKEN}"
+            }
+            payload = {
+                "pagesize": None,
+                "pagenumber": 1,
+                "query": {}
+            }
+            resp = await client.post(f"{BASE_API}/api/p/list", headers=headers, json=payload)
+            resp.raise_for_status()
+            return resp.json()
+    return await _make_request_with_retry(_do_request)
 
 async def _fetch_pdf_list(order_id: int | str) -> list[dict]:
-    async with httpx.AsyncClient(timeout=20.0) as client:
-        headers = {
-            "accept": "application/json",
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {REMOTE_TOKEN}",
-        }
-        # url = f"{BASE_API}/api/pdf/list?pk={order_id}"
-        # TODO: 测试用
-        url = f"{BASE_API}/api/pdf/list?pk=375760112050114560"
-        resp = await client.post(url, headers=headers)
-        print('>>>>pdf_list_resp_status', resp.status_code)
-        resp.raise_for_status()
-        data = resp.json()
-        print('>>>>pdf_list_resp_body', data.get('status_code'), data.get('message'))
-        content = data.get('content')
-        return content if isinstance(content, list) else []
+    async def _do_request():
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            headers = {
+                "accept": "application/json",
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {REMOTE_TOKEN}",
+            }
+            # url = f"{BASE_API}/api/pdf/list?pk={order_id}"
+            # TODO: 测试用
+            url = f"{BASE_API}/api/pdf/list?pk=375760112050114560"
+            resp = await client.post(url, headers=headers)
+            print('>>>>pdf_list_resp_status', resp.status_code)
+            resp.raise_for_status()
+            data = resp.json()
+            print('>>>>pdf_list_resp_body', data.get('status_code'), data.get('message'))
+            content = data.get('content')
+            return content if isinstance(content, list) else []
+    return await _make_request_with_retry(_do_request)
 
 async def _download_pdf_file(pk: int | str) -> httpx.Response:
-    async with httpx.AsyncClient(timeout=None, follow_redirects=True) as client:
-        headers = {
-            "accept": "application/pdf,application/octet-stream,*/*",
-            "Authorization": f"Bearer {REMOTE_TOKEN}",
-        }
-        url = f"{BASE_API}/api/pdf/download?pk={pk}"
-        # Stream the response to avoid buffering and preserve binary integrity
-        resp = await client.post(url, headers=headers)
-        return resp
+    async def _do_request():
+        async with httpx.AsyncClient(timeout=None, follow_redirects=True) as client:
+            headers = {
+                "accept": "application/pdf,application/octet-stream,*/*",
+                "Authorization": f"Bearer {REMOTE_TOKEN}",
+            }
+            url = f"{BASE_API}/api/pdf/download?pk={pk}"
+            # Stream the response to avoid buffering and preserve binary integrity
+            resp = await client.post(url, headers=headers)
+            return resp
+    return await _make_request_with_retry(_do_request)
 
 
 async def _download_binary_stream(pk: int | str):
     """下载二进制数据流（PDF）并流式返回"""
-    async with httpx.AsyncClient(timeout=None, follow_redirects=True) as client:
-        headers = {
-            "accept": "application/pdf,application/octet-stream,*/*",
-            "Authorization": f"Bearer {REMOTE_TOKEN}",
-        }
-        url = f"{BASE_API}/api/pdf/download?pk={pk}"
-        async with client.stream("POST", url, headers=headers) as resp:
-            resp.raise_for_status()
-            # 流式读取二进制数据
-            async for chunk in resp.aiter_bytes():
-                yield chunk
+    try:
+        async with httpx.AsyncClient(timeout=None, follow_redirects=True) as client:
+            headers = {
+                "accept": "application/pdf,application/octet-stream,*/*",
+                "Authorization": f"Bearer {REMOTE_TOKEN}",
+            }
+            url = f"{BASE_API}/api/pdf/download?pk={pk}"
+            async with client.stream("POST", url, headers=headers) as resp:
+                resp.raise_for_status()
+                # 流式读取二进制数据
+                async for chunk in resp.aiter_bytes():
+                    yield chunk
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 401:
+            print('>>>>401 Unauthorized detected in stream, refreshing token...')
+            new_token = await _refresh_token_and_reload()
+            if new_token:
+                print('>>>>Token refreshed, retrying stream request...')
+                # 重试一次
+                async with httpx.AsyncClient(timeout=None, follow_redirects=True) as client:
+                    headers = {
+                        "accept": "application/pdf,application/octet-stream,*/*",
+                        "Authorization": f"Bearer {REMOTE_TOKEN}",
+                    }
+                    url = f"{BASE_API}/api/pdf/download?pk={pk}"
+                    async with client.stream("POST", url, headers=headers) as resp:
+                        resp.raise_for_status()
+                        # 流式读取二进制数据
+                        async for chunk in resp.aiter_bytes():
+                            yield chunk
+            else:
+                print('>>>>Failed to refresh token, raising original error')
+                raise
+        else:
+            raise
 
 # get请求获取projects，api是 /api/p/list
 @router.get("/projects")
@@ -183,16 +259,18 @@ async def get_projects(db: Session = Depends(get_db_lims)):
 
 
 async def _post_remote_api(payload: dict) -> dict:
-    async with httpx.AsyncClient(timeout=20.0) as client:
-        headers = {
-            "accept": "application/json",
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {REMOTE_TOKEN}",
-        }
-        resp = await client.post(f"{BASE_API}/api", headers=headers, json=payload)
-        print('>>>>resp', resp.json().get('content'))
-        resp.raise_for_status()
-        return resp.json().get('content')
+    async def _do_request():
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            headers = {
+                "accept": "application/json",
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {REMOTE_TOKEN}",
+            }
+            resp = await client.post(f"{BASE_API}/api", headers=headers, json=payload)
+            print('>>>>resp', resp.json().get('content'))
+            resp.raise_for_status()
+            return resp.json().get('content')
+    return await _make_request_with_retry(_do_request)
 
 
 # def _extract_remote_id(data: dict[str, Any]) -> Any:
