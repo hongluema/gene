@@ -198,3 +198,7 @@ curl -X 'POST' \
  -H 'accept: application/json' \
  -H 'Content-Type: application/x-www-form-urlencoded' \
  -d 'username=xcxjk&password=aoruixcx123..&scope='
+
+<!-- 测试身份证号 -->
+
+> 320105198109141201
