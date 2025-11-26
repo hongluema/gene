@@ -15,11 +15,11 @@ class SampleBase(BaseModel):
     id_number: StrictStr | None = None
     gender: Literal["male", "female"] | None = None
     age: conint(gt=0, le=150) | None = None
-    program_id: int
-    org_id: int
-    sample_data_id: int | None = None
+    program_id: StrictStr
+    org_id: StrictStr
+    sample_data_id: StrictStr | None = None
     sample_data_name: StrictStr | None = None
-    order_id: int | None = None
+    order_id: StrictStr | None = None
     desc: StrictStr | None = None
     # 新增字段，设为可选
     receive_time: datetime | None = None
@@ -43,11 +43,11 @@ class SampleUpdate(BaseModel):
     id_number: StrictStr | None = None
     gender: Literal["male", "female"] | None = None
     age: conint(gt=0, le=150) | None = None
-    program_id: int | None = None
-    org_id: int | None = None
-    sample_data_id: int | None = None
+    program_id: StrictStr | None = None
+    org_id: StrictStr | None = None
+    sample_data_id: StrictStr | None = None
     sample_data_name: StrictStr | None = None
-    order_id: int | None = None
+    order_id: StrictStr | None = None
     desc: StrictStr | None = None
     # 新增字段
     receive_time: datetime | None = None
