@@ -34,6 +34,7 @@ class SampleCreate(SampleBase):
 
 
 class SampleUpdate(BaseModel):
+    sample_id: StrictStr
     code: StrictStr | None = None
     name: StrictStr | None = None
     type: Literal["fullBlood"] | None = None

@@ -97,7 +97,7 @@ def get_samples_by_id_number(
 
 @router.get("/{sample_id}", response_model=SampleRead)
 @log_exceptions
-def get_sample(sample_id: int, db: Session = Depends(get_db)):
+def get_sample(sample_id: str, db: Session = Depends(get_db)):
     sample = crud_sample.get_sample(db, sample_id=sample_id)
     if not sample:
         raise HTTPException(status_code=404, detail="Sample not found")
@@ -106,8 +106,8 @@ def get_sample(sample_id: int, db: Session = Depends(get_db)):
 
 @router.post("/update", response_model=SampleRead)
 @log_exceptions
-def update_sample(sample_id: int, payload: SampleUpdate, db: Session = Depends(get_db)):
-    sample = crud_sample.update_sample(db, sample_id=sample_id, sample=payload)
+def update_sample(payload: SampleUpdate, db: Session = Depends(get_db)):
+    sample = crud_sample.update_sample(db, sample_id=payload.sample_id, sample=payload)
     if not sample:
         raise HTTPException(status_code=404, detail="Sample not found")
     return sample
@@ -115,7 +115,7 @@ def update_sample(sample_id: int, payload: SampleUpdate, db: Session = Depends(g
 
 @router.post("/{sample_id}/delete")
 @log_exceptions
-def delete_sample(sample_id: int, db: Session = Depends(get_db)):
+def delete_sample(sample_id: str, db: Session = Depends(get_db)):
     success = crud_sample.delete_sample(db, sample_id=sample_id)
     if not success:
         raise HTTPException(status_code=404, detail="Sample not found")
