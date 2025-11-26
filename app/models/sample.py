@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import BigInteger, Integer, String, TIMESTAMP, Enum, text
+from sqlalchemy import BigInteger, Integer, String, TIMESTAMP, Enum, text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from db.base import Base
@@ -14,8 +14,8 @@ class Sample(Base):
     type: Mapped[str] = mapped_column(Enum("fullBlood", name="sample_type_enum"), nullable=False, server_default="fullBlood")
     process: Mapped[str] = mapped_column(Enum("progressing", "progressed", name="sample_process_enum"), nullable=False, server_default="progressing")
     user_id: Mapped[str] = mapped_column(String(12), nullable=False)
-    phone: Mapped[str | None] = mapped_column(String(32), unique=True, nullable=True)
-    id_number: Mapped[str | None] = mapped_column(String(32), unique=True, nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    id_number: Mapped[str | None] = mapped_column(String(32), nullable=True)
     gender: Mapped[str | None] = mapped_column(Enum("male", "female", name="gender_enum"), nullable=True)
     age: Mapped[int | None] = mapped_column(Integer, nullable=True)
     program_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
@@ -33,3 +33,7 @@ class Sample(Base):
     test_user: Mapped[str | None] = mapped_column(String(100), nullable=True)
     see_user: Mapped[str | None] = mapped_column(String(100), nullable=True)
     usable: Mapped[int] = mapped_column(Integer, nullable=True, server_default=text('1'))
+
+    __table_args__ = (
+        UniqueConstraint('sample_id', 'usable', name='samples_sample_id_usable_uk'),
+    )

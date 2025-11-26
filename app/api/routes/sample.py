@@ -66,8 +66,9 @@ def get_samples_by_phone(
     for sample in samples:
         try:
             # program_id 等字段现在已经是字符串类型（通过 BigIntegerAsString）
-            print('>>>>sample program_id:', sample.program_id, type(sample.program_id))
-            sample.program_name = program_map.get(sample.program_id)
+            print('>>>>sample program_id:', sample.program_id, program_map.get(str(sample.program_id)))
+            program_name = program_map.get(str(sample.program_id))
+            sample.program_name = program_name
         except Exception as e:
             print(f'>>>>error processing sample: {e}')
             continue

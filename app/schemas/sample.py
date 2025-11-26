@@ -61,6 +61,7 @@ class SampleRead(SampleBase):
     sample_id: int
     created_at: datetime
     updated_at: datetime
+    program_name: str | None = None
 
     class Config:
         from_attributes = True
