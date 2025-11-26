@@ -104,7 +104,7 @@ def get_sample(sample_id: int, db: Session = Depends(get_db)):
     return sample
 
 
-@router.post("/{sample_id}/update", response_model=SampleRead)
+@router.post("/update", response_model=SampleRead)
 @log_exceptions
 def update_sample(sample_id: int, payload: SampleUpdate, db: Session = Depends(get_db)):
     sample = crud_sample.update_sample(db, sample_id=sample_id, sample=payload)
