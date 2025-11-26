@@ -31,9 +31,9 @@ router = APIRouter()
 
 
 # TODO：正式环境
-BASE_API = "http://10.110.1.22:9003"
+# BASE_API = "http://10.110.1.22:9003"
 # TODO：开发环境
-# BASE_API = "http://117.149.9.79:9003"
+BASE_API = "http://117.149.9.79:9003"
 
 AUTH_URL = f"{BASE_API}/auth/token"
 AUTH_HEADERS = {
@@ -594,3 +594,57 @@ async def get_local_pdf(pk: str = Query(..., description="sample_data_id from re
     except Exception as e:
         print(f'>>>>get_local_pdf Exception: {repr(e)}')
         raise HTTPException(status_code=500, detail=f"Failed to read PDF file: {e}")
+
+
+@router.post("/static/clear")
+@log_exceptions
+async def clear_static_files():
+    """清除 static 目录下的所有文件"""
+    try:
+        # 确定 static 目录路径
+        static_dir = Path(__file__).resolve().parents[3] / "app/static"
+        
+        # 确保目录存在
+        if not static_dir.exists():
+            return JSONResponse(
+                content={
+                    "message": "success",
+                    "data": {
+                        "deleted_count": 0,
+                        "message": "Static directory does not exist",
+                    },
+                },
+                status_code=200,
+            )
+        
+        # 统计删除的文件数量
+        deleted_count = 0
+        deleted_files = []
+        
+        # 遍历目录中的所有文件并删除
+        for file_path in static_dir.iterdir():
+            if file_path.is_file():
+                try:
+                    file_path.unlink()
+                    deleted_count += 1
+                    deleted_files.append(file_path.name)
+                    print(f'>>>>Deleted file: {file_path.name}')
+                except Exception as e:
+                    print(f'>>>>Failed to delete file {file_path.name}: {repr(e)}')
+        
+        print(f'>>>>Cleared static directory: {deleted_count} files deleted')
+        
+        return JSONResponse(
+            content={
+                "message": "success",
+                "data": {
+                    "deleted_count": deleted_count,
+                    "deleted_files": deleted_files,
+                },
+            },
+            status_code=200,
+        )
+    except Exception as e:
+        print(f'>>>>clear_static_files Exception: {repr(e)}')
+        raise HTTPException(status_code=500, detail=f"Failed to clear static files: {e}")
+
