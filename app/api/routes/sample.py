@@ -36,6 +36,7 @@ def create_sample(payload: SampleCreate, db: Session = Depends(get_db)):
 def get_samples_by_user_id(
     user_id: str = Query(..., description="用户ID"),
     db: Session = Depends(get_db),
+    db_lims: Session = Depends(get_db_lims),
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
 ):
@@ -118,18 +119,6 @@ def get_samples_by_id_number(
         except Exception as e:
             print(f'>>>>error processing sample: {e}')
             continue
-    return samples
-
-
-@router.get("/user", response_model=list[SampleRead])
-@log_exceptions
-def get_samples_by_user_id(
-    user_id: str = Query(..., description="用户ID"),
-    db: Session = Depends(get_db),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(20, ge=1, le=100),
-):
-    samples = crud_sample.get_samples_by_user(db, user_id=user_id, skip=skip, limit=limit)
     return samples
 
 
