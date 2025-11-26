@@ -13,6 +13,27 @@ from api.routes.remote import _get_projects_data
 router = APIRouter()
 
 
+def _enrich_samples_with_program_name(samples, db_lims: Session) -> list[Sample]:
+    """为 samples 列表中的每个 sample 添加 program_name 字段"""
+    programEnums = _get_projects_data(db_lims)
+    # 创建 program_id 到 name 的映射字典
+    program_map = {item.get('id'): item.get('name') for item in programEnums if item.get('id') is not None}
+    print('>>>>program_map', program_map)
+    # 强制转换为列表
+    samples = list(samples) if samples else []
+    print('>>>>samples after list()', samples, type(samples), len(samples))
+    for sample in samples:
+        try:
+            # program_id 等字段现在已经是字符串类型（通过 BigIntegerAsString）
+            print('>>>>sample program_id:', sample.program_id, program_map.get(str(sample.program_id)))
+            program_name = program_map.get(str(sample.program_id))
+            sample.program_name = program_name
+        except Exception as e:
+            print(f'>>>>error processing sample: {e}')
+            continue
+    return samples
+
+
 @router.get("/", response_model=list[SampleRead])
 @log_exceptions
 def list_samples(
@@ -40,25 +61,9 @@ def get_samples_by_user_id(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
 ):
-    programEnums = _get_projects_data(db_lims)
-    # 创建 program_id 到 name 的映射字典
-    program_map = {item.get('id'): item.get('name') for item in programEnums if item.get('id') is not None}
-    print('>>>>program_map', program_map)
     samples = crud_sample.get_samples_by_user(db, user_id=user_id, skip=skip, limit=limit)
     print('>>>>samples', samples, type(samples))
-    # 强制转换为列表
-    samples = list(samples) if samples else []
-    print('>>>>samples after list()', samples, type(samples), len(samples))
-    for sample in samples:
-        try:
-            # program_id 等字段现在已经是字符串类型（通过 BigIntegerAsString）
-            print('>>>>sample program_id:', sample.program_id, program_map.get(str(sample.program_id)))
-            program_name = program_map.get(str(sample.program_id))
-            sample.program_name = program_name
-        except Exception as e:
-            print(f'>>>>error processing sample: {e}')
-            continue
-    return samples
+    return _enrich_samples_with_program_name(samples, db_lims)
 
 
 
@@ -71,25 +76,9 @@ def get_samples_by_phone(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
 ):
-    programEnums = _get_projects_data(db_lims)
-    # 创建 program_id 到 name 的映射字典
-    program_map = {item.get('id'): item.get('name') for item in programEnums if item.get('id') is not None}
-    print('>>>>program_map', program_map)
     samples = crud_sample.get_samples_by_phone(db, phone=phone, skip=skip, limit=limit)
     print('>>>>samples', samples, type(samples))
-    # 强制转换为列表
-    samples = list(samples) if samples else []
-    print('>>>>samples after list()', samples, type(samples), len(samples))
-    for sample in samples:
-        try:
-            # program_id 等字段现在已经是字符串类型（通过 BigIntegerAsString）
-            print('>>>>sample program_id:', sample.program_id, program_map.get(str(sample.program_id)))
-            program_name = program_map.get(str(sample.program_id))
-            sample.program_name = program_name
-        except Exception as e:
-            print(f'>>>>error processing sample: {e}')
-            continue
-    return samples
+    return _enrich_samples_with_program_name(samples, db_lims)
 
 
 @router.get("/id-number", response_model=list[SampleRead])
@@ -101,25 +90,9 @@ def get_samples_by_id_number(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
 ):
-    programEnums = _get_projects_data(db_lims)
-    # 创建 program_id 到 name 的映射字典
-    program_map = {item.get('id'): item.get('name') for item in programEnums if item.get('id') is not None}
-    print('>>>>program_map', program_map)
     samples = crud_sample.get_samples_by_id_number(db, id_number=id_number, skip=skip, limit=limit)
     print('>>>>samples', samples, type(samples))
-    # 强制转换为列表
-    samples = list(samples) if samples else []
-    print('>>>>samples after list()', samples, type(samples), len(samples))
-    for sample in samples:
-        try:
-            # program_id 等字段现在已经是字符串类型（通过 BigIntegerAsString）
-            print('>>>>sample program_id:', sample.program_id, program_map.get(str(sample.program_id)))
-            program_name = program_map.get(str(sample.program_id))
-            sample.program_name = program_name
-        except Exception as e:
-            print(f'>>>>error processing sample: {e}')
-            continue
-    return samples
+    return _enrich_samples_with_program_name(samples, db_lims)
 
 
 @router.get("/{sample_id}", response_model=SampleRead)
