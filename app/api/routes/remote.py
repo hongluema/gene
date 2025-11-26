@@ -31,9 +31,9 @@ router = APIRouter()
 
 
 # TODO：正式环境
-# BASE_API = "http://10.110.1.22:9003"
+BASE_API = "http://10.110.1.22:9003"
 # TODO：开发环境
-BASE_API = "http://117.149.9.79:9003"
+# BASE_API = "http://117.149.9.79:9003"
 
 AUTH_URL = f"{BASE_API}/auth/token"
 AUTH_HEADERS = {
