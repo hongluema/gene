@@ -95,6 +95,20 @@ def get_samples_by_id_number(
     return _enrich_samples_with_program_name(samples, db_lims)
 
 
+@router.get("/query/my", response_model=list[SampleRead])
+@log_exceptions
+def get_samples_by_user_or_phone(
+    user_id: str = Query(..., description="用户ID"),
+    phone: str = Query(..., description="手机号"),
+    db: Session = Depends(get_db),
+    db_lims: Session = Depends(get_db_lims),
+):
+    """根据 user_id 或 phone 查询 samples，条件为 phone = phone OR user_id = user_id，并去重"""
+    samples = crud_sample.get_samples_by_user_or_phone(db, user_id=user_id, phone=phone)
+    print('>>>>samples', samples, type(samples))
+    return _enrich_samples_with_program_name(samples, db_lims)
+
+
 @router.get("/{sample_id}", response_model=SampleRead)
 @log_exceptions
 def get_sample(sample_id: str, db: Session = Depends(get_db)):
@@ -120,3 +134,4 @@ def delete_sample(sample_id: str, db: Session = Depends(get_db)):
     if not success:
         raise HTTPException(status_code=404, detail="Sample not found")
     return None
+

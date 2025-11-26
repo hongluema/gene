@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from models.sample import Sample
 from schemas.sample import SampleCreate, SampleUpdate
 import random
@@ -68,6 +69,21 @@ def get_samples_by_phone(db: Session, phone: str, skip: int = 0, limit: int = 10
 
 def get_samples_by_id_number(db: Session, id_number: str, skip: int = 0, limit: int = 100) -> list[Sample]:
     return db.query(Sample).filter(Sample.id_number == id_number).offset(skip).limit(limit).all()
+
+
+def get_samples_by_user_or_phone(db: Session, user_id: str, phone: str) -> list[Sample]:
+    """根据 user_id 或 phone 查询 samples，条件为 phone = phone OR user_id = user_id，并去重"""
+    samples = db.query(Sample).filter(
+        or_(Sample.phone == phone, Sample.user_id == user_id)
+    ).all()
+    # 根据 sample_id 去重（使用字典保持顺序）
+    seen = set()
+    unique_samples = []
+    for sample in samples:
+        if sample.sample_id not in seen:
+            seen.add(sample.sample_id)
+            unique_samples.append(sample)
+    return unique_samples
 
 
 def get_samples_by_program(db: Session, program_id: int, skip: int = 0, limit: int = 100) -> list[Sample]:
