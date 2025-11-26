@@ -58,7 +58,7 @@ class SampleUpdate(BaseModel):
 
 
 class SampleRead(SampleBase):
-    sample_id: int
+    sample_id: StrictStr
     created_at: datetime
     updated_at: datetime
     program_name: str | None = None
