@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
-from api.deps import get_db
+from api.deps import get_db, get_db_lims
 from models.sample import Sample
 from schemas.sample import SampleCreate, SampleRead, SampleUpdate
 from crud import sample as crud_sample
 from common.decorators import log_exceptions
+from api.routes.remote import _get_projects_data
 
 
 router = APIRouter()
@@ -48,10 +49,28 @@ def get_samples_by_user_id(
 def get_samples_by_phone(
     phone: str = Query(..., description="手机号"),
     db: Session = Depends(get_db),
+    db_lims: Session = Depends(get_db_lims),
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
 ):
+    programEnums = _get_projects_data(db_lims)
+    # print('>>>>programEnums', programEnums)
+    # 创建 program_id 到 name 的映射字典
+    program_map = {item.get('id'): item.get('name') for item in programEnums if item.get('id') is not None}
+    print('>>>>program_map', program_map)
     samples = crud_sample.get_samples_by_phone(db, phone=phone, skip=skip, limit=limit)
+    print('>>>>samples', samples, type(samples))
+    # 强制转换为列表
+    samples = list(samples) if samples else []
+    print('>>>>samples after list()', samples, type(samples), len(samples))
+    for sample in samples:
+        try:
+            # program_id 等字段现在已经是字符串类型（通过 BigIntegerAsString）
+            print('>>>>sample program_id:', sample.program_id, type(sample.program_id))
+            sample.program_name = program_map.get(sample.program_id)
+        except Exception as e:
+            print(f'>>>>error processing sample: {e}')
+            continue
     return samples
 
 

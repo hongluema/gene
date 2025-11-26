@@ -3,6 +3,7 @@ import asyncio
 import base64
 import importlib
 import sys
+from datetime import datetime, date
 from typing import Any
 from urllib.parse import quote
 
@@ -30,9 +31,9 @@ router = APIRouter()
 
 
 # TODO：正式环境
-BASE_API = "http://10.110.1.22:9003"
+# BASE_API = "http://10.110.1.22:9003"
 # TODO：开发环境
-# BASE_API = "http://117.149.9.79:9003"
+BASE_API = "http://117.149.9.79:9003"
 
 AUTH_URL = f"{BASE_API}/auth/token"
 AUTH_HEADERS = {
@@ -236,19 +237,47 @@ async def _download_binary_stream(pk: int | str):
         else:
             raise
 
+def _serialize_datetime(obj: Any) -> Any:
+    """递归地将字典中的 datetime 和 date 对象转换为字符串"""
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    elif isinstance(obj, date):
+        return obj.isoformat()
+    elif isinstance(obj, dict):
+        return {key: _serialize_datetime(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [_serialize_datetime(item) for item in obj]
+    else:
+        return obj
+
+
+def _get_projects_data(db: Session):
+    """获取项目数据的核心逻辑，可被其他模块调用"""
+    sql = text("select * from program where usable = 1")
+    result = db.execute(sql)
+    # 使用 mappings() 将 Row 对象转换为字典，然后转换为普通字典列表以便 JSON 序列化
+    rows = result.mappings().all()
+    # 将 RowMapping 对象转换为普通字典，并将 id 字段转换为字符串
+    projects = []
+    for row in rows:
+        project_dict = dict(row)
+        if 'id' in project_dict and project_dict['id'] is not None:
+            project_dict['id'] = str(project_dict['id'])
+        projects.append(project_dict)
+    # 递归处理 datetime 对象
+    return _serialize_datetime(projects)
+
+
 # get请求获取projects，api是 /api/p/list
 @router.get("/projects")
 @log_exceptions
 async def get_projects(db: Session = Depends(get_db_lims)):
-    sql = text("select * from program where usable = 1")
-    # 2. 执行 SQL，传入参数字典
-    result = db.execute(sql)
-    # 3. 获取结果
-    # result.mappings() 会把结果转换成类似字典的格式 {'id': 1, 'name': 'xxx'}
-    # .all() 获取所有行
-    rows = result.mappings().all()
-    
-    return rows
+    projects = _get_projects_data(db)
+    print('>>>>projects', projects)
+    return JSONResponse(
+        content={"message": "success", "data": projects},
+        status_code=200,
+    )
     # projects = await _fetch_projects()
     # data = projects.get('content').get('rows');
     # print('>>>>projects', );
