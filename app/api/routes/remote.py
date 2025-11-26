@@ -364,8 +364,8 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
             id_number=id_number,
             gender=sex,
             age=age,
-            program_id=program_id,
-            org_id=org_id,
+            program_id=str(program_id),
+            org_id=str(org_id),
             sample_data_id=None,
             order_id=None,
             desc=desc or "",
@@ -400,7 +400,7 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
             print('>>>>target before update', target, order_id_val)
             if target is not None and order_id_val is not None:
                 try:
-                    target.order_id = int(order_id_val)
+                    target.order_id = str(order_id_val)
                 except Exception as _:
                     target.order_id = None
                 db.commit()
@@ -435,7 +435,7 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
                             if not target:
                                 continue
                             try:
-                                target.sample_data_id = int(sample_data_id)
+                                target.sample_data_id = str(sample_data_id)
                             except Exception:
                                 target.sample_data_id = None
                             # also persist the pdf item name into sample_data_name

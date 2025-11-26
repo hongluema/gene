@@ -10,7 +10,7 @@ def generate_sample_id(db: Session) -> int:
     """生成唯一的 sample_id，格式为 6 + 17位随机数字（总计18位）。"""
     while True:
         random_digits = ''.join(random.choices(string.digits, k=17))
-        sample_id = int(f"6{random_digits}")
+        sample_id = f"6{random_digits}"
         if not db.query(Sample).filter(Sample.sample_id == sample_id).first():
             return sample_id
 
