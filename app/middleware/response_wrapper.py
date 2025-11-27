@@ -82,4 +82,6 @@ class UnifiedResponseMiddleware(BaseHTTPMiddleware):
             data = payload
 
         unified = {"data": data, "message": message, "status_code": status_code}
-        return JSONResponse(content=unified, status_code=status_code)
+        # 创建过滤后的响应头（排除 Content-Length，让 Starlette 自动计算）; 要把 跨域支持给保留
+        filtered_headers = {k: v for k, v in response.headers.items() if k.lower() != "content-length"}
+        return JSONResponse(content=unified, status_code=status_code, headers=filtered_headers)
