@@ -25,7 +25,8 @@ def list_users(
     stmt = select(User).order_by(User.created_at.desc()).offset(skip).limit(limit)
     users = list(db.scalars(stmt))
     user_data = [UserRead.model_validate(user).model_dump(mode='json') for user in users]
-    return JSONResponse(content={"message": "success", "data": user_data}, status_code=200)
+    total = db.query(User).count()
+    return JSONResponse(content={"message": "success", "data": {"list": user_data, "total": total}}, status_code=200)
 
 
 @router.post("/create", response_model=UserRead, status_code=status.HTTP_201_CREATED)
