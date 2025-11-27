@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from common.decorators import log_exceptions
 from core.config import settings
 
-# 导入阿里云 OCR SDK
+# 导入阿里云 OCR SDK（基于官方文档）
 try:
     from alibabacloud_ocr_api20210707.client import Client as OcrClient
     from alibabacloud_tea_openapi import models as open_api_models
@@ -34,7 +34,10 @@ class IDCardOCRResponse(BaseModel):
 
 
 def _create_ocr_client() -> OcrClient:
-    """创建阿里云 OCR 客户端"""
+    """
+    创建阿里云 OCR 客户端（基于官方文档）
+    官方文档：https://help.aliyun.com/zh/ocr/developer-reference/api-ocr-api-2021-07-07-recognizeidcard
+    """
     if not OcrClient:
         raise HTTPException(
             status_code=500,
@@ -47,33 +50,63 @@ def _create_ocr_client() -> OcrClient:
             detail="Aliyun OCR credentials not configured. Please set ALIYUN_ACCESS_KEY_ID and ALIYUN_ACCESS_KEY_SECRET in .env file"
         )
 
+    # 按照官方文档配置客户端
     config = open_api_models.Config(
         access_key_id=settings.ALIYUN_ACCESS_KEY_ID,
-        access_key_secret=settings.ALIYUN_ACCESS_KEY_SECRET,
-        endpoint='ocr.cn-shanghai.aliyuncs.com'
+        access_key_secret=settings.ALIYUN_ACCESS_KEY_SECRET
     )
+    # 设置 endpoint（必须，根据官方文档）
+    config.endpoint = 'ocr-api.cn-hangzhou.aliyuncs.com'
     return OcrClient(config)
 
 
-def _parse_id_card_face(data: dict) -> dict:
-    """解析身份证正面（人像面）信息"""
+def _parse_id_card_face(result_data) -> dict:
+    """
+    解析身份证正面（人像面）信息
+    根据 RecognizeIdcard API 响应字段解析
+    """
+    # 处理可能的属性访问方式（对象属性或字典）
+    def safe_get(obj, attr, default=""):
+        if hasattr(obj, attr):
+            value = getattr(obj, attr, default)
+            return value if value is not None else default
+        elif isinstance(obj, dict):
+            return obj.get(attr, default)
+        return default
+
     return {
-        "name": data.get("name", ""),  # 姓名
-        "gender": data.get("sex", ""),  # 性别
-        "nationality": data.get("nationality", ""),  # 民族
-        "birth_date": data.get("birth", ""),  # 出生日期
-        "address": data.get("address", ""),  # 住址
-        "id_number": data.get("num", ""),  # 身份证号码
+        "name": safe_get(result_data, "name"),  # 姓名
+        "gender": safe_get(result_data, "sex"),  # 性别
+        "nationality": safe_get(result_data, "nationality"),  # 民族
+        "birth_date": safe_get(result_data, "birth"),  # 出生日期
+        "address": safe_get(result_data, "address"),  # 住址
+        "id_number": safe_get(result_data, "num"),  # 身份证号码
     }
 
 
-def _parse_id_card_back(data: dict) -> dict:
-    """解析身份证背面（国徽面）信息"""
+def _parse_id_card_back(result_data) -> dict:
+    """
+    解析身份证背面（国徽面）信息
+    根据 RecognizeIdcard API 响应字段解析
+    """
+    # 处理可能的属性访问方式（对象属性或字典）
+    def safe_get(obj, attr, default=""):
+        if hasattr(obj, attr):
+            value = getattr(obj, attr, default)
+            return value if value is not None else default
+        elif isinstance(obj, dict):
+            return obj.get(attr, default)
+        return default
+
+    start_date = safe_get(result_data, "start_date")
+    end_date = safe_get(result_data, "end_date")
+    valid_period = f"{start_date}-{end_date}" if start_date and end_date else safe_get(result_data, "valid_period")
+
     return {
-        "issue_authority": data.get("issue", ""),  # 签发机关
-        "valid_period": data.get("valid_period", ""),  # 有效期限
-        "start_date": data.get("start_date", ""),  # 有效期开始日期
-        "end_date": data.get("end_date", ""),  # 有效期结束日期
+        "issue_authority": safe_get(result_data, "issue"),  # 签发机关
+        "valid_period": valid_period,  # 有效期限
+        "start_date": start_date,  # 有效期开始日期
+        "end_date": end_date,  # 有效期结束日期
     }
 
 
@@ -82,6 +115,9 @@ def _parse_id_card_back(data: dict) -> dict:
 async def recognize_id_card_base64(request: IDCardOCRRequest):
     """
     识别身份证信息（接收 base64 编码的图片）
+
+    基于阿里云官方文档实现：
+    https://help.aliyun.com/zh/ocr/developer-reference/api-ocr-api-2021-07-07-recognizeidcard
 
     Args:
         request: 包含 base64 编码的身份证图片和面向（正面/背面）
@@ -104,22 +140,35 @@ async def recognize_id_card_base64(request: IDCardOCRRequest):
         if "base64," in image_data:
             image_data = image_data.split("base64,")[1]
 
-        # 创建识别请求
+        # 将 base64 解码为二进制数据（根据官方文档，body 应该是二进制数据）
+        try:
+            image_binary = base64.b64decode(image_data)
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid base64 image data: {str(e)}"
+            )
+
+        # 创建识别请求（根据官方文档）
         recognize_request = ocr_models.RecognizeIdcardRequest(
-            body=image_data.encode('utf-8')
+            body=image_binary  # body 接收二进制数据
         )
-        print('>>>>recognize_request', recognize_request)
+
+        # 创建运行时选项
         runtime = util_models.RuntimeOptions()
 
         # 调用阿里云 OCR API
         response = client.recognize_idcard_with_options(recognize_request, runtime)
         print('>>>>response', response)
         if not response or not response.body:
-            raise HTTPException(status_code=500, detail="OCR service returned empty response")
+            raise HTTPException(
+                status_code=500,
+                detail="OCR service returned empty response"
+            )
 
         # 解析响应数据
-        result_data = response.body.data
-
+        result_data = response.body.Data
+        print('>>>>result_data', result_data)
         if not result_data:
             return JSONResponse(
                 content={
@@ -132,21 +181,9 @@ async def recognize_id_card_base64(request: IDCardOCRRequest):
 
         # 根据正反面解析不同的字段
         if request.side == "face":
-            parsed_data = _parse_id_card_face({
-                "name": result_data.get("name"),
-                "sex": result_data.get("sex"),
-                "nationality": result_data.get("nationality"),
-                "birth": result_data.get("birth"),
-                "address": result_data.get("address"),
-                "num": result_data.get("num"),
-            })
+            parsed_data = _parse_id_card_face(result_data)
         else:  # back
-            parsed_data = _parse_id_card_back({
-                "issue": result_data.get("issue"),
-                "valid_period": result_data.get("start_date") + "-" + result_data.get("end_date") if result_data.get("start_date") and result_data.get("end_date") else "",
-                "start_date": result_data.get("start_date"),
-                "end_date": result_data.get("end_date"),
-            })
+            parsed_data = _parse_id_card_back(result_data)
 
         return JSONResponse(
             content={
@@ -160,11 +197,30 @@ async def recognize_id_card_base64(request: IDCardOCRRequest):
     except HTTPException:
         raise
     except Exception as e:
+        error_str = str(e)
         print(f">>>>OCR recognition failed: {repr(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to recognize ID card: {str(e)}"
-        )
+
+        # 增强错误处理：明确提示不同的错误类型
+        if "ocrServiceNotOpen" in error_str or ("401" in error_str and "not activated" in error_str.lower()):
+            raise HTTPException(
+                status_code=503,
+                detail="OCR service not activated. Please activate Aliyun OCR service in your Aliyun console: https://www.aliyun.com/product/ocr"
+            )
+        elif "InvalidAccessKeyId" in error_str or "Specified access key is not found" in error_str:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid Aliyun Access Key ID. Please check your credentials."
+            )
+        elif "SignatureDoesNotMatch" in error_str:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid Aliyun Access Key Secret. Please check your credentials."
+            )
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to recognize ID card: {error_str}"
+            )
 
 
 @router.post("/id-card/recognize-file", response_model=IDCardOCRResponse)
@@ -232,7 +288,8 @@ async def health_check():
         return JSONResponse(
             content={
                 "status": "healthy",
-                "message": "OCR service is running"
+                "message": "OCR service is running",
+                "endpoint": "ocr-api.cn-hangzhou.aliyuncs.com"
             },
             status_code=200
         )
