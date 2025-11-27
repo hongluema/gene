@@ -1,4 +1,5 @@
 import base64
+import json
 from typing import Optional
 from fastapi import APIRouter, HTTPException, File, UploadFile, Form
 from fastapi.responses import JSONResponse
@@ -74,13 +75,15 @@ def _parse_id_card_face(result_data) -> dict:
             return obj.get(attr, default)
         return default
 
+    # 根据实际返回的字段名解析
+    # 实际字段：name, sex, ethnicity, birthDate, address, idNumber
     return {
         "name": safe_get(result_data, "name"),  # 姓名
-        "gender": safe_get(result_data, "sex"),  # 性别
-        "nationality": safe_get(result_data, "nationality"),  # 民族
-        "birth_date": safe_get(result_data, "birth"),  # 出生日期
+        "gender": safe_get(result_data, "sex") or safe_get(result_data, "gender"),  # 性别（优先使用 sex）
+        "nationality": safe_get(result_data, "ethnicity") or safe_get(result_data, "nationality"),  # 民族（优先使用 ethnicity）
+        "birth_date": safe_get(result_data, "birthDate") or safe_get(result_data, "birth"),  # 出生日期（优先使用 birthDate）
         "address": safe_get(result_data, "address"),  # 住址
-        "id_number": safe_get(result_data, "num"),  # 身份证号码
+        "id_number": safe_get(result_data, "idNumber") or safe_get(result_data, "num"),  # 身份证号码（优先使用 idNumber）
     }
 
 
@@ -166,10 +169,22 @@ async def recognize_id_card_base64(request: IDCardOCRRequest):
                 detail="OCR service returned empty response"
             )
 
-        # 解析响应数据
-        result_data = response.body.Data
-        print('>>>>result_data', result_data)
-        if not result_data:
+        # 解析响应数据 - 兼容字典和对象两种访问方式
+        result_data_str = None
+        if isinstance(response.body, dict):
+            # 如果 body 是字典，直接访问
+            result_data_str = response.body.get('Data')
+        else:
+            # 如果 body 是对象，尝试多种属性访问方式
+            result_data_str = getattr(response.body, 'Data', None) or getattr(response.body, 'data', None)
+            # 如果还是 None，尝试访问 body.body（嵌套结构）
+            if result_data_str is None and hasattr(response.body, 'body'):
+                body_dict = response.body.body
+                if isinstance(body_dict, dict):
+                    result_data_str = body_dict.get('Data')
+        
+        print('>>>>result_data_str', result_data_str)
+        if not result_data_str:
             return JSONResponse(
                 content={
                     "success": False,
@@ -178,6 +193,32 @@ async def recognize_id_card_base64(request: IDCardOCRRequest):
                 },
                 status_code=200
             )
+
+        # Data 是 JSON 字符串，需要解析
+        try:
+            if isinstance(result_data_str, str):
+                result_data = json.loads(result_data_str)
+            else:
+                result_data = result_data_str
+        except json.JSONDecodeError as e:
+            print(f'>>>>Failed to parse Data JSON: {repr(e)}')
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to parse OCR response data: {str(e)}"
+            )
+        print('>>>>result_data', result_data)
+        # 从解析后的 JSON 中提取实际的数据
+        # 根据打印的数据结构，实际数据在 data.face.data 或 data.back.data 中
+        if isinstance(result_data, dict):
+            data_section = result_data.get('data', {})
+            if request.side == "face":
+                face_data = data_section.get('face', {}).get('data', {})
+                result_data = face_data
+            else:  # back
+                back_data = data_section.get('back', {}).get('data', {})
+                result_data = back_data
+
+        print('>>>>parsed result_data', result_data)
 
         # 根据正反面解析不同的字段
         if request.side == "face":
