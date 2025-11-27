@@ -31,9 +31,9 @@ router = APIRouter()
 
 
 # TODO：正式环境
-# BASE_API = "http://10.110.1.22:9003"
+BASE_API = "http://10.110.1.22:9003"
 # TODO：开发环境
-BASE_API = "http://117.149.9.79:9003"
+# BASE_API = "http://117.149.9.79:9003"
 
 AUTH_URL = f"{BASE_API}/auth/token"
 AUTH_HEADERS = {
@@ -174,8 +174,6 @@ async def _fetch_pdf_list(order_id: int | str) -> list[dict]:
                 "Authorization": f"Bearer {REMOTE_TOKEN}",
             }
             url = f"{BASE_API}/api/pdf/list?pk={order_id}"
-            # TODO: 测试用
-            # url = f"{BASE_API}/api/pdf/list?pk=375760112050114560"
             resp = await client.post(url, headers=headers)
             print('>>>>pdf_list_resp_status', resp.status_code)
             resp.raise_for_status()
