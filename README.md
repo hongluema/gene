@@ -202,3 +202,10 @@ curl -X 'POST' \
 <!-- 测试身份证号 -->
 
 > 320105198109141201
+
+curl -X POST "http://localhost:8002/api/ocr/id-card/recognize" \
+ -H "Content-Type: application/json" \
+ -d '{
+"image_base64": "data:image/jpeg;base64,xxxx",
+"side": "face"
+}'

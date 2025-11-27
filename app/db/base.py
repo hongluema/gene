@@ -7,9 +7,9 @@ from sqlalchemy.orm import sessionmaker
 
 # --- 数据库 1: Applet WY ---
 # TODO：正式环境
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://walry:arApp123qwe..@10.110.1.22:33060/applet_wy?charset=utf8mb4"
+# SQLALCHEMY_DATABASE_URL = "mysql+pymysql://walry:arApp123qwe..@10.110.1.22:33060/applet_wy?charset=utf8mb4"
 # TODO：开发环境
-# SQLALCHEMY_DATABASE_URL = "mysql+pymysql://walry:arApp123qwe..@117.149.9.79:33060/applet_wy?charset=utf8mb4"
+SQLALCHEMY_DATABASE_URL = "mysql+pymysql://walry:arApp123qwe..@117.149.9.79:33060/applet_wy?charset=utf8mb4"
 # 创建数据库引擎（echo=True 会打印 SQL 语句，调试用）
 # 注意：pymysql 在处理大整数时可能会丢失精度，需要在连接时设置参数
 engine = create_engine(
@@ -31,9 +31,9 @@ Base = declarative_base()
 # --- 数据库 2: LIMS ---
 # 注意这里将数据库名改为了 lims
 # TODO：正式环境
-SQLALCHEMY_DATABASE_URL_LIMS = "mysql+pymysql://walry:arApp123qwe..@10.110.1.22:33060/lims?charset=utf8mb4"
+# SQLALCHEMY_DATABASE_URL_LIMS = "mysql+pymysql://walry:arApp123qwe..@10.110.1.22:33060/lims?charset=utf8mb4"
 # TODO：开发环境
-# SQLALCHEMY_DATABASE_URL_LIMS = "mysql+pymysql://walry:arApp123qwe..@117.149.9.79:33060/lims?charset=utf8mb4"
+SQLALCHEMY_DATABASE_URL_LIMS = "mysql+pymysql://walry:arApp123qwe..@117.149.9.79:33060/lims?charset=utf8mb4"
 
 engine_lims = create_engine(
     SQLALCHEMY_DATABASE_URL_LIMS, 
