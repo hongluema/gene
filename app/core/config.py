@@ -26,11 +26,6 @@ class Settings(BaseSettings):
     WX_JSCODE2SESSION_URL: str = "https://api.weixin.qq.com/sns/jscode2session"
     WX_GRANT_TYPE: str = "authorization_code"
 
-    # Aliyun OCR
-    ALIYUN_ACCESS_KEY_ID: str | None = None
-    ALIYUN_ACCESS_KEY_SECRET: str | None = None
-    ALIYUN_OCR_ENDPOINT: str = "https://ocr-api.cn-hangzhou.aliyuncs.com"
-
     def _normalize_cors(self) -> list[str]:
         if isinstance(self.CORS_ORIGINS, list):
             return self.CORS_ORIGINS
