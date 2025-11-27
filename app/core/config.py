@@ -2,11 +2,6 @@ from functools import lru_cache
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# 微信小程序配置（jscode2session）
-WX_APPID="wx357bbb5f4b26e2ed"
-WX_SECRET="1cb952edfbad25653d97d5cb20f8c00a"
-# 1cb952edfbad25653d97d5cb20f8c00a
-
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
@@ -26,14 +21,14 @@ class Settings(BaseSettings):
     DATABASE_URL: str | None = None
 
     # WeChat Mini Program
-    WX_APPID: str | None = WX_APPID
-    WX_SECRET: str | None = WX_SECRET
+    WX_APPID: str | None = None
+    WX_SECRET: str | None = None
     WX_JSCODE2SESSION_URL: str = "https://api.weixin.qq.com/sns/jscode2session"
     WX_GRANT_TYPE: str = "authorization_code"
 
     # Aliyun OCR
-    ALIYUN_ACCESS_KEY_ID: str | None = 'LTAI5t6w5whKfqBscfnYFJ6n'
-    ALIYUN_ACCESS_KEY_SECRET: str | None = 'RgOkODZuCap6ne35AZOiOdrqTk31ZC'
+    ALIYUN_ACCESS_KEY_ID: str | None = None
+    ALIYUN_ACCESS_KEY_SECRET: str | None = None
     ALIYUN_OCR_ENDPOINT: str = "https://ocr-api.cn-hangzhou.aliyuncs.com"
 
     def _normalize_cors(self) -> list[str]:

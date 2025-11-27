@@ -44,7 +44,8 @@ def _create_ocr_client() -> OcrClient:
             status_code=500,
             detail="Aliyun OCR SDK not installed. Please install: pip install alibabacloud_ocr_api20210707"
         )
-
+    print('>>>>settings.ALIYUN_ACCESS_KEY_ID', settings.ALIYUN_ACCESS_KEY_ID)
+    print('>>>>settings.ALIYUN_ACCESS_KEY_SECRET', settings.ALIYUN_ACCESS_KEY_SECRET)
     if not settings.ALIYUN_ACCESS_KEY_ID or not settings.ALIYUN_ACCESS_KEY_SECRET:
         raise HTTPException(
             status_code=500,
@@ -162,7 +163,6 @@ async def recognize_id_card_base64(request: IDCardOCRRequest):
 
         # 调用阿里云 OCR API
         response = client.recognize_idcard_with_options(recognize_request, runtime)
-        print('>>>>response', response)
         if not response or not response.body:
             raise HTTPException(
                 status_code=500,
@@ -183,7 +183,6 @@ async def recognize_id_card_base64(request: IDCardOCRRequest):
                 if isinstance(body_dict, dict):
                     result_data_str = body_dict.get('Data')
         
-        print('>>>>result_data_str', result_data_str)
         if not result_data_str:
             return JSONResponse(
                 content={
