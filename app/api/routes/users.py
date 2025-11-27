@@ -15,7 +15,7 @@ from common.decorators import log_exceptions
 router = APIRouter()
 
 
-@router.get("/", response_model=list[UserRead])
+@router.get("/list", response_model=list[UserRead])
 @log_exceptions
 def list_users(
     db: Session = Depends(get_db),
@@ -23,7 +23,9 @@ def list_users(
     limit: int = Query(20, ge=1, le=100),
 ):
     stmt = select(User).order_by(User.created_at.desc()).offset(skip).limit(limit)
-    return list(db.scalars(stmt))
+    users = list(db.scalars(stmt))
+    user_data = [UserRead.model_validate(user).model_dump(mode='json') for user in users]
+    return JSONResponse(content={"message": "success", "data": user_data}, status_code=200)
 
 
 @router.post("/create", response_model=UserRead, status_code=status.HTTP_201_CREATED)
