@@ -8,3 +8,5 @@ __pycache__/**
 *.py[cod]
 /logs/app.log
 /app/static/*
+.claude/*
+.idea/*
