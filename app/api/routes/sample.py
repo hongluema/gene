@@ -34,15 +34,15 @@ def _enrich_samples_with_program_name(samples, db_lims: Session) -> list[Sample]
     return samples
 
 
-@router.get("/", response_model=list[SampleRead])
+@router.get("/list", response_model=list[SampleRead])
 @log_exceptions
 def list_samples(
     user_id: str | None = Query(None, description="用户ID"),
     db: Session = Depends(get_db),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(20, ge=1, le=100),
+    begin: int = Query(0, ge=0),
+    length: int = Query(20, ge=1, le=100),
 ):
-    stmt = select(Sample).order_by(Sample.created_at.desc()).offset(skip).limit(limit)
+    stmt = select(Sample).order_by(Sample.created_at.desc()).offset(begin).limit(length)
     return list(db.scalars(stmt))
 
 

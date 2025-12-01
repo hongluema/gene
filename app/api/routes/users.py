@@ -19,11 +19,11 @@ router = APIRouter()
 @log_exceptions
 def list_users(
     db: Session = Depends(get_db),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(20, ge=1, le=100),
+    begin: int = Query(0, ge=0, description="起始位置"),
+    length: int = Query(20, ge=1, le=100, description="返回记录数"),
 ):
     # 统一使用 ORM 方式查询，确保自动应用 usable=1 条件
-    users = db.query(User).order_by(User.created_at.desc()).offset(skip).limit(limit).all()
+    users = db.query(User).order_by(User.created_at.desc()).offset(begin).limit(length).all()
     user_data = [UserRead.model_validate(user).model_dump(mode='json') for user in users]
     print('>>>>>user_data', user_data);
     total = db.query(User).count()
