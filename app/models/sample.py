@@ -16,7 +16,7 @@ class Sample(Base):
     user_id: Mapped[str] = mapped_column(String(12), nullable=False) # 录入人的user_id
     phone: Mapped[str | None] = mapped_column(String(32), nullable=True) # 检测人的手机号
     id_number: Mapped[str | None] = mapped_column(String(32), nullable=True) # 检测人的身份证号
-    gender: Mapped[str | None] = mapped_column(Enum("male", "female", name="gender_enum"), nullable=True) # 检测人的性别
+    gender: Mapped[str | None] = mapped_column(Enum("男", "女", name="gender_enum"), nullable=True) # 检测人的性别
     age: Mapped[int | None] = mapped_column(Integer, nullable=True) # 检测人的年龄
     program_id: Mapped[str] = mapped_column(String(32), nullable=False) # 项目id
     org_id: Mapped[str] = mapped_column(String(32), nullable=False) # 机构id
