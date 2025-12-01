@@ -17,7 +17,7 @@ class UserBase(BaseModel):
     avatar: StrictStr | None = None
     phone: StrictStr | None = None
     id_number: StrictStr | None = None
-    gender: Literal["男", "女"] | None = None
+    gender: StrictStr | None = None
     age: conint(gt=0, le=150) | None = None
 
     @field_validator("name", "avatar", "phone", "id_number")

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
 from api.deps import get_db
@@ -22,9 +22,10 @@ def list_users(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
 ):
-    stmt = select(User).order_by(User.created_at.desc()).offset(skip).limit(limit)
-    users = list(db.scalars(stmt))
+    # 统一使用 ORM 方式查询，确保自动应用 usable=1 条件
+    users = db.query(User).order_by(User.created_at.desc()).offset(skip).limit(limit).all()
     user_data = [UserRead.model_validate(user).model_dump(mode='json') for user in users]
+    print('>>>>>user_data', user_data);
     total = db.query(User).count()
     return JSONResponse(content={"message": "success", "data": {"list": user_data, "total": total}}, status_code=200)
 
