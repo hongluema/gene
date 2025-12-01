@@ -147,7 +147,8 @@ def update_sample(db: Session, sample_id: str, sample: SampleUpdate) -> Sample |
 def delete_sample(db: Session, sample_id: str) -> bool:
     db_sample = db.query(Sample).filter(Sample.sample_id == sample_id).first()
     if not db_sample:
-        return False
-    db.delete(db_sample)
+        return None
+    db_sample.usable = 0
     db.commit()
+    db.refresh(db_sample)
     return True

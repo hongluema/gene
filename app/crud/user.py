@@ -69,7 +69,8 @@ def update_user(db: Session, user_id: str, user: UserUpdate) -> User | None:
 def delete_user(db: Session, user_id: str) -> bool:
     db_user = db.query(User).filter(User.user_id == user_id).first()
     if not db_user:
-        return False
-    db.delete(db_user)
+        return None
+    db_user.usable = 0
     db.commit()
+    db.refresh(db_user)
     return True
