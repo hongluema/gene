@@ -205,7 +205,7 @@ async def _download_binary_stream(pk: int | str):
                 "accept": "application/pdf,application/octet-stream,*/*",
                 "Authorization": f"Bearer {REMOTE_TOKEN}",
             }
-            url = f"{BASE_API}/api/pdf/download?pk={pk}"
+            url = f"{BASE_API}/api/pdf/download/wx?pk={pk}"
             async with client.stream("POST", url, headers=headers) as resp:
                 resp.raise_for_status()
                 # 流式读取二进制数据
