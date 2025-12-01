@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import BigInteger, Integer, String, TIMESTAMP, Enum, text, UniqueConstraint
+from sqlalchemy import BigInteger, Integer, String, TIMESTAMP, Enum, text, UniqueConstraint, event
 from sqlalchemy.orm import Mapped, mapped_column
 
 from db.base import Base
@@ -16,7 +16,7 @@ class Sample(Base):
     user_id: Mapped[str] = mapped_column(String(12), nullable=False) # 录入人的user_id
     phone: Mapped[str | None] = mapped_column(String(32), nullable=True) # 检测人的手机号
     id_number: Mapped[str | None] = mapped_column(String(32), nullable=True) # 检测人的身份证号
-    gender: Mapped[str | None] = mapped_column(Enum("男", "女", name="gender_enum"), nullable=True) # 检测人的性别
+    gender: Mapped[str | None] = mapped_column(String(32), nullable=True) # 检测人的性别
     age: Mapped[int | None] = mapped_column(Integer, nullable=True) # 检测人的年龄
     program_id: Mapped[str] = mapped_column(String(32), nullable=False) # 项目id
     org_id: Mapped[str] = mapped_column(String(32), nullable=False) # 机构id
@@ -37,3 +37,25 @@ class Sample(Base):
     __table_args__ = (
         UniqueConstraint('sample_id', 'usable', name='samples_sample_id_usable_uk'),
     )
+
+
+# 为 Sample 模型添加默认过滤条件：usable = 1
+# 导入 Session 以注册事件监听器
+from sqlalchemy.orm import Session as SQLAlchemySession
+
+# 使用 do_orm_execute 事件在 ORM 查询执行前自动添加过滤条件
+@event.listens_for(SQLAlchemySession, "do_orm_execute")
+def receive_sample_do_orm_execute(execute_state):
+    """自动为 Sample 查询添加 usable = 1 的过滤条件"""
+    if execute_state.is_select and not execute_state.is_column_load and not execute_state.is_relationship_load:
+        # 检查查询是否涉及 Sample 模型
+        if hasattr(execute_state.statement, 'selected_columns'):
+            # 检查查询是否包含 Sample 表
+            froms = execute_state.statement.froms if hasattr(execute_state.statement, 'froms') else []
+            if Sample.__table__ in froms:
+                # 检查是否已经存在 usable 过滤条件
+                has_usable_filter = False
+                if hasattr(execute_state.statement, 'whereclause') and execute_state.statement.whereclause:
+                    has_usable_filter = any('usable' in str(clause) for clause in execute_state.statement.whereclause.clauses)
+                if not has_usable_filter:
+                    execute_state.statement = execute_state.statement.where(Sample.usable == 1)

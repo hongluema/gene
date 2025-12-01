@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import JSONResponse
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
@@ -42,8 +43,17 @@ def list_samples(
     begin: int = Query(0, ge=0),
     length: int = Query(20, ge=1, le=100),
 ):
-    stmt = select(Sample).order_by(Sample.created_at.desc()).offset(begin).limit(length)
-    return list(db.scalars(stmt))
+    # 统一使用 ORM 方式查询，确保自动应用 usable=1 条件
+    query = db.query(Sample).order_by(Sample.created_at.desc())
+    # if user_id:
+    #     query = query.filter(Sample.user_id == user_id)
+    samples = query.offset(begin).limit(length).all()
+    sample_data = [SampleRead.model_validate(sample).model_dump(mode='json') for sample in samples]
+    # user_data = [UserRead.model_validate(user).model_dump(mode='json') for user in users]
+    # print('>>>>>user_data', user_data);
+    total = db.query(Sample).count()
+    return JSONResponse(content={"message": "success", "data": {"list": sample_data, "total": total}}, status_code=200)
+    # return {"list": samples, "total": total}
 
 
 @router.post("/", response_model=SampleRead, status_code=status.HTTP_201_CREATED)
