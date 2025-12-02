@@ -57,6 +57,7 @@ def receive_sample_do_orm_execute(execute_state):
                 # 检查是否已经存在 usable 过滤条件
                 has_usable_filter = False
                 if hasattr(execute_state.statement, 'whereclause') and execute_state.statement.whereclause is not None:
-                    has_usable_filter = any('usable' in str(clause) for clause in execute_state.statement.whereclause.clauses)
+                    # 将整个 whereclause 转换为字符串来检查是否包含 usable
+                    has_usable_filter = 'usable' in str(execute_state.statement.whereclause)
                 if not has_usable_filter:
                     execute_state.statement = execute_state.statement.where(Sample.usable == 1)
