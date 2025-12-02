@@ -20,6 +20,7 @@ from crud import sample as crud_sample
 from schemas.sample import SampleCreate
 from crud import user as crud_user
 from schemas.user import UserCreate
+from settings import BASE_API
 
 try:
     from core.constants import REMOTE_TOKEN
@@ -33,7 +34,7 @@ router = APIRouter()
 # TODO：正式环境
 # BASE_API = "http://10.110.1.22:9003"
 # TODO：开发环境
-BASE_API = "http://117.149.9.79:9003"
+# BASE_API = "http://117.149.9.79:9003"
 
 AUTH_URL = f"{BASE_API}/auth/token"
 AUTH_HEADERS = {
