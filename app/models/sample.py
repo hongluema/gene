@@ -9,7 +9,7 @@ class Sample(Base):
     __tablename__ = "samples"
 
     sample_id: Mapped[str] = mapped_column(String(32), primary_key=True) # 样品id
-    code: Mapped[str] = mapped_column(String(255), unique=True, nullable=False) # 血管的编码
+    code: Mapped[str] = mapped_column(String(255), nullable=False) # 血管的编码
     name: Mapped[str] = mapped_column(String(255), nullable=False) # 检测人的姓名
     type: Mapped[str] = mapped_column(Enum("fullBlood", name="sample_type_enum"), nullable=False, server_default="fullBlood") # 样本类型。默认是全血
     process: Mapped[str] = mapped_column(Enum("progressing", "progressed", name="sample_process_enum"), nullable=False, server_default="progressing") # 样本状态。默认是检测中
@@ -32,6 +32,7 @@ class Sample(Base):
     report_date: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=True) # 报告完成时间
     test_user: Mapped[str | None] = mapped_column(String(100), nullable=True) # 检测人
     see_user: Mapped[str | None] = mapped_column(String(100), nullable=True) # 审核人
+    mongoid: Mapped[str | None] = mapped_column(String(100), nullable=True) # mongodb的id
     usable: Mapped[int] = mapped_column(Integer, nullable=True, server_default=text('1'))
 
     __table_args__ = (

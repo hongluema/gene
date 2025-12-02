@@ -39,6 +39,7 @@ def create_sample(db: Session, sample: SampleCreate) -> Sample:
         report_date=sample.report_date,
         test_user=sample.test_user,
         see_user=sample.see_user,
+        mongoid=sample.mongoid,
         usable=sample.usable
     )
     db.add(db_sample)

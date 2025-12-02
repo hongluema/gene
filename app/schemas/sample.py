@@ -26,6 +26,7 @@ class SampleBase(BaseModel):
     report_date: datetime | None = None
     test_user: StrictStr | None = None
     see_user: StrictStr | None = None
+    mongoid: StrictStr | None = None
     usable: int | None = None
 
 
@@ -55,6 +56,7 @@ class SampleUpdate(BaseModel):
     report_date: datetime | None = None
     test_user: StrictStr | None = None
     see_user: StrictStr | None = None
+    mongoid: StrictStr | None = None
     usable: int | None = None
 
 

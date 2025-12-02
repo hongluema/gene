@@ -1,6 +1,7 @@
 __pycache__/**
 **/__pycache__/**
 ./app/settings.py
+app/settings.py
 .env
 .env.local
 .env.*.local
