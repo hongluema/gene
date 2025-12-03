@@ -325,7 +325,7 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
     customer = payload.get("customer") if isinstance(payload, dict) else None
     code = (first or {}).get("other_code")
     name = (customer or {}).get("name")
-    sex = (customer or {}).get("sex")  # male/female
+    gender = (customer or {}).get("gender")  # male/female
     age = (customer or {}).get("age")
     phone = (customer or {}).get("phone")
     id_number = (customer or {}).get("id_number")
@@ -351,7 +351,7 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
     print('>>>>code', code);
     if code:
         db_sample = db.query(Sample).filter(Sample.code == code).first()
-        print('>>>>code', code, '>', name, '>', user_id, '>', phone, '>', id_number, '>', sex, '>', age, '>', program_id, '>', org_id, '>', desc);
+        print('>>>>code', code, '>', name, '>', user_id, '>', phone, '>', id_number, '>', gender, '>', age, '>', program_id, '>', org_id, '>', desc);
     if not db_sample:
         sc = SampleCreate(
             code=code or "",
@@ -361,7 +361,7 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
             user_id=user_id,
             phone=phone,
             id_number=id_number,
-            gender=sex,
+            gender=gender,
             age=age,
             program_id=str(program_id),
             org_id=str(org_id),
