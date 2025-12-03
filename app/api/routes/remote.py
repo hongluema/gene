@@ -668,6 +668,17 @@ async def _get_mongo_mongoid(payload: dict) -> dict:
 async def get_mongo_info(mongoid: str = Query(..., description="MongoDB document ID")):
     """根据 mongoid 获取 MongoDB 信息"""
     try:
+        print('>>>>mongoid', mongoid)
+        # 检查mongoid是否为空，如果为空则直接返回空数据
+        if not mongoid or mongoid.strip() == "":
+            return JSONResponse(
+                content={
+                    "message": "success",
+                    "data": {},
+                },
+                status_code=200,
+            )
+        # mongoid非空时，执行远程请求
         payload = {"mongoid": mongoid}
         result = await _get_mongo_mongoid(payload)
         return JSONResponse(
