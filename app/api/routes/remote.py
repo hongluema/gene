@@ -647,3 +647,37 @@ async def clear_static_files():
         print(f'>>>>clear_static_files Exception: {repr(e)}')
         raise HTTPException(status_code=500, detail=f"Failed to clear static files: {e}")
 
+
+
+async def _get_mongo_mongoid(payload: dict) -> dict:
+    async def _do_request():
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            headers = {
+                "accept": "application/json",
+                "Authorization": f"Bearer {REMOTE_TOKEN}",
+            }
+            resp = await client.get(f"{BASE_API}/api/mongo/{payload.get('mongoid')}", headers=headers)
+            print('>>>>resp', resp.json().get('content'))
+            resp.raise_for_status()
+            return resp.json().get('content')
+    return await _make_request_with_retry(_do_request)
+
+
+@router.get("/mongoInfo")
+@log_exceptions
+async def get_mongo_info(mongoid: str = Query(..., description="MongoDB document ID")):
+    """根据 mongoid 获取 MongoDB 信息"""
+    try:
+        payload = {"mongoid": mongoid}
+        result = await _get_mongo_mongoid(payload)
+        return JSONResponse(
+            content={
+                "message": "success",
+                "data": result,
+            },
+            status_code=200,
+        )
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=f"Remote API error: {e}")
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=502, detail=f"Failed to connect to remote API: {e}")
