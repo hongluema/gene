@@ -40,6 +40,7 @@ def _enrich_samples_with_program_name(samples, db_lims: Session) -> list[Sample]
 def list_samples(
     user_id: str | None = Query(None, description="用户ID"),
     db: Session = Depends(get_db),
+    db_lims: Session = Depends(get_db_lims),
     begin: int = Query(0, ge=0),
     length: int = Query(20, ge=1, le=100),
 ):
@@ -48,10 +49,14 @@ def list_samples(
     # if user_id:
     #     query = query.filter(Sample.user_id == user_id)
     samples = query.offset(begin).limit(length).all()
-    sample_data = [SampleRead.model_validate(sample).model_dump(mode='json') for sample in samples]
+    # sample_data = [SampleRead.model_validate(sample).model_dump(mode='json') for sample in samples]
     # user_data = [UserRead.model_validate(user).model_dump(mode='json') for user in users]
     # print('>>>>>user_data', user_data);
     total = db.query(Sample).count()
+    sample_data =  _enrich_samples_with_program_name(samples, db_lims);
+    print('>>>>sample_data', sample_data);
+    # 将sample_data 转为 list
+    sample_data = [SampleRead.model_validate(sample).model_dump(mode='json') for sample in sample_data]
     return JSONResponse(content={"message": "success", "data": {"list": sample_data, "total": total}}, status_code=200)
     # return {"list": samples, "total": total}
 
