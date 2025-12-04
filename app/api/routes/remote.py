@@ -349,11 +349,7 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
     # 3) Create or reuse local Sample by code
     db_sample = None
     print('>>>>code', code);
-    if code:
-        db_sample = db.query(Sample).filter(Sample.code == code).first()
-        print('>>>>code', code, '>', name, '>', user_id, '>', phone, '>', id_number, '>', gender, '>', age, '>', program_id, '>', org_id, '>', desc);
-    if not db_sample:
-        sc = SampleCreate(
+    sc = SampleCreate(
             code=code or "",
             name=name,
             type="fullBlood",
@@ -369,8 +365,9 @@ async def create_remote_order(payload: dict, db: Session = Depends(get_db)):
             order_id=None,
             desc=desc or "",
         )
-        print('>>>>sc', sc);
-        db_sample = crud_sample.create_sample(db, sample=sc)
+    print('>>>>sc', sc);
+    db_sample = crud_sample.create_sample(db, sample=sc)
+        
     print('>>>>db_sample', db_sample);
     # 4) Forward to remote API
     remote_resp = await _post_remote_api(payload)
