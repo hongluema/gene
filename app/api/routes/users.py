@@ -62,10 +62,13 @@ def update_user(payload: UserUpdate, db: Session = Depends(get_db)):
     user = crud_user.update_user(db, user_id=payload.user_id, user=payload)
     if not user:
         return JSONResponse(
-            content={"message": "用户不存在", "data": {"user_id": payload.user_id}},
+            content={"message": "用户不存在", "data": {"user_id": payload.user_id}, "success": False},
+            status_code=400,
+        )
+    return JSONResponse(
+            content={"message": "更新成功", "data": {"user_id": payload.user_id}, "success": True},
             status_code=200,
         )
-    return user
 
 
 @router.post("/{user_id}/delete")
