@@ -138,8 +138,14 @@ def get_sample(sample_id: str, db: Session = Depends(get_db)):
 def update_sample(payload: SampleUpdate, db: Session = Depends(get_db)):
     sample = crud_sample.update_sample(db, sample_id=payload.sample_id, sample=payload)
     if not sample:
-        raise HTTPException(status_code=404, detail="Sample not found")
-    return sample
+        return JSONResponse(
+            content={"message": "样本不存在", "data": {"sample_id": payload.sample_id}, "success": False},
+            status_code=400,
+        )
+    return JSONResponse(
+            content={"message": "更新成功", "data": {"sample_id": payload.sample_id}, "success": True},
+            status_code=200,
+        )
 
 
 @router.post("/{sample_id}/delete")
