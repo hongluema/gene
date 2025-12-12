@@ -32,9 +32,9 @@ def create_apply(db: Session, apply: ApplyCreate) -> Apply:
     return db_apply
 
 
-def get_apply(db: Session, apply_id: str) -> Apply | None:
+def get_apply(db: Session, sample_id: str) -> Apply | None:
     """根据apply_id获取申请"""
-    return db.query(Apply).filter(Apply.apply_id == apply_id).first()
+    return db.query(Apply).filter(Apply.sample_id == sample_id).first()
 
 
 def get_applies(db: Session, skip: int = 0, limit: int = 100) -> list[Apply]:

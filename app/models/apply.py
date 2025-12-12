@@ -25,7 +25,7 @@ class Apply(Base):
     usable: Mapped[int] = mapped_column(Integer, nullable=True, server_default=text('1'))
 
     __table_args__ = (
-        UniqueConstraint('apply_id', 'usable', name='applies_apply_id_usable_uk'),
+        UniqueConstraint('sample_id', 'usable', name='applies_sample_id_usable_uk'),
     )
 
 

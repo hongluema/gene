@@ -43,11 +43,11 @@ def create_apply(payload: ApplyCreate, db: Session = Depends(get_db)):
 @router.get("/info", response_model=ApplyRead)
 @log_exceptions
 def get_apply(
-    apply_id: str = Query(..., description="申请ID"),
+    sample_id: str = Query(..., description="样本ID"),
     db: Session = Depends(get_db)
 ):
     """获取申请详情"""
-    apply = crud_apply.get_apply(db, apply_id=apply_id)
+    apply = crud_apply.get_apply(db, sample_id=sample_id)
     if not apply:
         raise HTTPException(status_code=404, detail="申请不存在")
     return apply
