@@ -174,7 +174,7 @@ async def _fetch_pdf_list(order_id: int | str) -> list[dict]:
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {REMOTE_TOKEN}",
             }
-            url = f"{BASE_API}/api/pdf/list?pk={order_id}"
+            url = f"{BASE_API}/api/pdf/list/wx?pk={order_id}"
             resp = await client.post(url, headers=headers)
             print('>>>>pdf_list_resp_status', resp.status_code)
             resp.raise_for_status()
@@ -191,7 +191,7 @@ async def _download_pdf_file(pk: int | str) -> httpx.Response:
                 "accept": "application/pdf,application/octet-stream,*/*",
                 "Authorization": f"Bearer {REMOTE_TOKEN}",
             }
-            url = f"{BASE_API}/api/pdf/download?pk={pk}"
+            url = f"{BASE_API}/api/pdf/download/wx?pk={pk}"
             # Stream the response to avoid buffering and preserve binary integrity
             resp = await client.post(url, headers=headers)
             return resp
@@ -224,7 +224,7 @@ async def _download_binary_stream(pk: int | str):
                         "accept": "application/pdf,application/octet-stream,*/*",
                         "Authorization": f"Bearer {REMOTE_TOKEN}",
                     }
-                    url = f"{BASE_API}/api/pdf/download?pk={pk}"
+                    url = f"{BASE_API}/api/pdf/download/wx?pk={pk}"
                     async with client.stream("POST", url, headers=headers) as resp:
                         resp.raise_for_status()
                         # 流式读取二进制数据
@@ -294,7 +294,7 @@ async def _post_remote_api(payload: dict) -> dict:
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {REMOTE_TOKEN}",
             }
-            resp = await client.post(f"{BASE_API}/api", headers=headers, json=payload)
+            resp = await client.post(f"{BASE_API}/api/wx", headers=headers, json=payload)
             print('>>>>resp', resp.json().get('content'))
             resp.raise_for_status()
             return resp.json().get('content')
