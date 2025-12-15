@@ -61,20 +61,20 @@ def get_samples(db: Session, skip: int = 0, limit: int = 100) -> list[Sample]:
 
 
 def get_samples_by_user(db: Session, user_id: str, skip: int = 0, limit: int = 100) -> list[Sample]:
-    return db.query(Sample).filter(Sample.user_id == user_id).offset(skip).limit(limit).all()
+    return db.query(Sample).order_by(Sample.created_at.desc()).filter(Sample.user_id == user_id).offset(skip).limit(limit).all()
 
 
 def get_samples_by_phone(db: Session, phone: str, skip: int = 0, limit: int = 100) -> list[Sample]:
-    return db.query(Sample).filter(Sample.phone == phone).offset(skip).limit(limit).all()
+    return db.query(Sample).order_by(Sample.created_at.desc()).filter(Sample.phone == phone).offset(skip).limit(limit).all()
 
 
 def get_samples_by_id_number(db: Session, id_number: str, skip: int = 0, limit: int = 100) -> list[Sample]:
-    return db.query(Sample).filter(Sample.id_number == id_number).offset(skip).limit(limit).all()
+    return db.query(Sample).order_by(Sample.created_at.desc()).filter(Sample.id_number == id_number).offset(skip).limit(limit).all()
 
 
 def get_samples_by_user_or_phone(db: Session, user_id: str, phone: str) -> list[Sample]:
     """根据 user_id 或 phone 查询 samples，条件为 phone = phone OR user_id = user_id，并去重"""
-    samples = db.query(Sample).filter(
+    samples = db.query(Sample).order_by(Sample.created_at.desc()).filter(
         or_(Sample.phone == phone, Sample.user_id == user_id)
     ).all()
     # 根据 sample_id 去重（使用字典保持顺序）
