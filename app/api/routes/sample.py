@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from api.deps import get_db, get_db_lims
 from models.sample import Sample
+from models.apply import Apply
 from schemas.sample import SampleCreate, SampleRead, SampleUpdate
 from crud import sample as crud_sample
 from common.decorators import log_exceptions
@@ -49,6 +50,19 @@ def list_samples(
     # if user_id:
     #     query = query.filter(Sample.user_id == user_id)
     samples = query.offset(begin).limit(length).all()
+    # 查询 applies 表获取 apply_status（usable=1 会自动过滤）
+    sample_ids = [sample.sample_id for sample in samples]
+    if sample_ids:
+        applies = db.query(Apply).filter(Apply.sample_id.in_(sample_ids)).all()
+        apply_map = {apply.sample_id: apply.status for apply in applies}
+
+        # 为每个 sample 添加 apply_status 属性
+        for sample in samples:
+            sample.apply_status = apply_map.get(sample.sample_id)
+
+        # 过滤掉 status 为 approved 的样本
+        samples = [sample for sample in samples if sample.apply_status != 'approved']
+
     # sample_data = [SampleRead.model_validate(sample).model_dump(mode='json') for sample in samples]
     # user_data = [UserRead.model_validate(user).model_dump(mode='json') for user in users]
     # print('>>>>>user_data', user_data);
@@ -121,6 +135,20 @@ def get_samples_by_user_or_phone(
     """根据 user_id 或 phone 查询 samples，条件为 phone = phone OR user_id = user_id，并去重"""
     samples = crud_sample.get_samples_by_user_or_phone(db, user_id=user_id, phone=phone)
     print('>>>>samples', samples, type(samples))
+
+    # 查询 applies 表获取 apply_status（usable=1 会自动过滤）
+    sample_ids = [sample.sample_id for sample in samples]
+    if sample_ids:
+        applies = db.query(Apply).filter(Apply.sample_id.in_(sample_ids)).all()
+        apply_map = {apply.sample_id: apply.status for apply in applies}
+
+        # 为每个 sample 添加 apply_status 属性
+        for sample in samples:
+            sample.apply_status = apply_map.get(sample.sample_id)
+
+        # 过滤掉 status 为 approved 的样本
+        samples = [sample for sample in samples if sample.apply_status != 'approved']
+
     return _enrich_samples_with_program_name(samples, db_lims)
 
 
