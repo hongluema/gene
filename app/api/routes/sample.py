@@ -15,6 +15,38 @@ from api.routes.remote import _get_projects_data
 router = APIRouter()
 
 
+def _enrich_samples_with_apply_status(samples, db: Session, filter_approved: bool = False) -> list[Sample]:
+    """为 samples 列表中的每个 sample 添加 apply_status 字段，并可选择过滤掉 approved 状态的样本
+
+    Args:
+        samples: 样本列表
+        db: 数据库会话
+        filter_approved: 是否过滤掉 status 为 approved 的样本
+
+    Returns:
+        处理后的样本列表
+    """
+    if not samples:
+        return samples
+
+    # 查询 applies 表获取 apply_status（usable=1 会自动过滤）
+    sample_ids = [sample.sample_id for sample in samples]
+    apply_map = {}
+    if sample_ids:
+        applies = db.query(Apply).filter(Apply.sample_id.in_(sample_ids)).all()
+        apply_map = {apply.sample_id: apply.status for apply in applies}
+
+    # 为每个 sample 添加 apply_status 属性
+    for sample in samples:
+        sample.apply_status = apply_map.get(sample.sample_id)
+
+    # 过滤掉 status 为 approved 的样本（如果需要）
+    if filter_approved:
+        samples = [sample for sample in samples if sample.apply_status != 'approved']
+
+    return samples
+
+
 def _enrich_samples_with_program_name(samples, db_lims: Session) -> list[Sample]:
     """为 samples 列表中的每个 sample 添加 program_name 字段"""
     programEnums = _get_projects_data(db_lims)
@@ -50,22 +82,10 @@ def list_samples(
     # if user_id:
     #     query = query.filter(Sample.user_id == user_id)
     samples = query.offset(begin).limit(length).all()
-    # 查询 applies 表获取 apply_status（usable=1 会自动过滤）
-    sample_ids = [sample.sample_id for sample in samples]
-    apply_map = {}
-    if sample_ids:
-        applies = db.query(Apply).filter(Apply.sample_id.in_(sample_ids)).all()
-        apply_map = {apply.sample_id: apply.status for apply in applies}
-        print('>>>>apply_map', apply_map);
 
-    # 为每个 sample 添加 apply_status 属性
-    for sample in samples:
-        print('>>>>sample', sample.sample_id);
-        sample.apply_status = apply_map.get(sample.sample_id)
-        print('>>>>sample status', sample.apply_status);
+    # 添加 apply_status 属性（不过滤）
+    samples = _enrich_samples_with_apply_status(samples, db, filter_approved=False)
 
-    # 过滤掉 status 为 approved 的样本
-    # samples = [sample for sample in samples if sample.apply_status != 'approved']
     total = db.query(Sample).count()
     sample_data =  _enrich_samples_with_program_name(samples, db_lims);
     print('>>>>sample_data', sample_data);
@@ -107,6 +127,10 @@ def get_samples_by_phone(
 ):
     samples = crud_sample.get_samples_by_phone(db, phone=phone, skip=skip, limit=limit)
     print('>>>>samples', samples, type(samples))
+
+    # 添加 apply_status 属性并过滤掉 approved 状态的样本
+    samples = _enrich_samples_with_apply_status(samples, db, filter_approved=True)
+
     return _enrich_samples_with_program_name(samples, db_lims)
 
 
@@ -121,6 +145,10 @@ def get_samples_by_id_number(
 ):
     samples = crud_sample.get_samples_by_id_number(db, id_number=id_number, skip=skip, limit=limit)
     print('>>>>samples', samples, type(samples))
+
+    # 添加 apply_status 属性并过滤掉 approved 状态的样本
+    samples = _enrich_samples_with_apply_status(samples, db, filter_approved=True)
+
     return _enrich_samples_with_program_name(samples, db_lims)
 
 
@@ -136,18 +164,8 @@ def get_samples_by_user_or_phone(
     samples = crud_sample.get_samples_by_user_or_phone(db, user_id=user_id, phone=phone)
     print('>>>>samples', samples, type(samples))
 
-    # 查询 applies 表获取 apply_status（usable=1 会自动过滤）
-    sample_ids = [sample.sample_id for sample in samples]
-    if sample_ids:
-        applies = db.query(Apply).filter(Apply.sample_id.in_(sample_ids)).all()
-        apply_map = {apply.sample_id: apply.status for apply in applies}
-
-        # 为每个 sample 添加 apply_status 属性
-        for sample in samples:
-            sample.apply_status = apply_map.get(sample.sample_id)
-
-        # 过滤掉 status 为 approved 的样本
-        samples = [sample for sample in samples if sample.apply_status != 'approved']
+    # 添加 apply_status 属性并过滤掉 approved 状态的样本
+    samples = _enrich_samples_with_apply_status(samples, db, filter_approved=True)
 
     return _enrich_samples_with_program_name(samples, db_lims)
 
