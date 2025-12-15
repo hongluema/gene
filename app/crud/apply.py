@@ -69,6 +69,10 @@ def update_apply(db: Session, apply_id: str, apply: ApplyUpdate) -> Apply | None
         db_apply.apply_user_phone = apply.apply_user_phone
     if apply.reason is not None:
         db_apply.reason = apply.reason
+    if apply.status is not None:
+        db_apply.status = apply.status
+    if apply.review_time is not None:
+        db_apply.review_time = apply.review_time
     db.commit()
     db.refresh(db_apply)
     return db_apply

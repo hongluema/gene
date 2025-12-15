@@ -20,6 +20,8 @@ class ApplyUpdate(BaseModel):
     apply_id: StrictStr
     apply_user_phone: StrictStr | None = None
     reason: StrictStr | None = None
+    status: Literal["pending", "approved", "rejected"] | None = None
+    review_time: datetime | None = None
 
 
 class ApplyReview(BaseModel):
