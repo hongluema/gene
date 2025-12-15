@@ -52,20 +52,20 @@ def list_samples(
     samples = query.offset(begin).limit(length).all()
     # 查询 applies 表获取 apply_status（usable=1 会自动过滤）
     sample_ids = [sample.sample_id for sample in samples]
+    apply_map = {}
     if sample_ids:
         applies = db.query(Apply).filter(Apply.sample_id.in_(sample_ids)).all()
         apply_map = {apply.sample_id: apply.status for apply in applies}
+        print('>>>>apply_map', apply_map);
 
-        # 为每个 sample 添加 apply_status 属性
-        for sample in samples:
-            sample.apply_status = apply_map.get(sample.sample_id)
+    # 为每个 sample 添加 apply_status 属性
+    for sample in samples:
+        print('>>>>sample', sample.sample_id);
+        sample.apply_status = apply_map.get(sample.sample_id)
+        print('>>>>sample status', sample.apply_status);
 
-        # 过滤掉 status 为 approved 的样本
-        samples = [sample for sample in samples if sample.apply_status != 'approved']
-
-    # sample_data = [SampleRead.model_validate(sample).model_dump(mode='json') for sample in samples]
-    # user_data = [UserRead.model_validate(user).model_dump(mode='json') for user in users]
-    # print('>>>>>user_data', user_data);
+    # 过滤掉 status 为 approved 的样本
+    # samples = [sample for sample in samples if sample.apply_status != 'approved']
     total = db.query(Sample).count()
     sample_data =  _enrich_samples_with_program_name(samples, db_lims);
     print('>>>>sample_data', sample_data);

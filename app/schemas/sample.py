@@ -65,6 +65,7 @@ class SampleRead(SampleBase):
     created_at: datetime
     updated_at: datetime
     program_name: str | None = None
+    apply_status: str | None = None
 
     class Config:
         from_attributes = True
