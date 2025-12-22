@@ -689,3 +689,4 @@ async def get_mongo_info(mongoid: str = Query(..., description="MongoDB document
         raise HTTPException(status_code=e.response.status_code, detail=f"Remote API error: {e}")
     except httpx.RequestError as e:
         raise HTTPException(status_code=502, detail=f"Failed to connect to remote API: {e}")
+

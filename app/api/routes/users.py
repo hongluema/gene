@@ -7,7 +7,7 @@ from api.deps import get_db
 from models import User
 from schemas.user import UserCreate, UserRead, UserUpdate
 from crud import user as crud_user
-
+from common.sms import sms_service
 
 from common.decorators import log_exceptions
 
@@ -44,6 +44,33 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
 
     user = crud_user.create_user(db, user=payload)
     return user
+
+
+@router.post("/send-sms-code")
+@log_exceptions
+def send_sms_code(phone: str):
+    """
+    发送短信验证码接口
+    
+    Args:
+        phone: 接收验证码的手机号
+        
+    Returns:
+        JSON响应结果
+    """
+    if not phone:
+        raise HTTPException(status_code=400, detail="手机号不能为空")
+    
+    # 发送验证码
+    success = sms_service.send_verification_code(phone)
+    
+    if success:
+        return JSONResponse(
+            content={"message": "验证码发送成功", "data": {}},
+            status_code=200
+        )
+    else:
+        raise HTTPException(status_code=500, detail="验证码发送失败")
 
 
 @router.get("/info", response_model=UserRead)

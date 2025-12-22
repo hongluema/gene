@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     ALIYUN_ACCESS_KEY_SECRET: str | None = None
     ALIYUN_OCR_ENDPOINT: str = "https://ocr-api.cn-hangzhou.aliyuncs.com"
 
+    # Aliyun SMS
+    ALIYUN_ACCESS_KEY_ID_SMS: str | None = None
+    ALIYUN_ACCESS_KEY_SECRET_SMS: str | None = None
+    SMS_TEMPLATE_CODE: str | None = None
+
     def _normalize_cors(self) -> list[str]:
         if isinstance(self.CORS_ORIGINS, list):
             return self.CORS_ORIGINS
