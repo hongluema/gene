@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 
 from api.deps import get_db
 from models.apply import Apply
+from models.user import User
+from models.sample import Sample
 from schemas.apply import ApplyCreate, ApplyRead, ApplyUpdate, ApplyReview
 from crud import apply as crud_apply
 from common.decorators import log_exceptions
@@ -22,6 +24,15 @@ def list_applies(
     """获取申请列表"""
     applies = crud_apply.get_applies(db, skip=begin, limit=length)
     apply_data = [ApplyRead.model_validate(apply).model_dump(mode='json') for apply in applies]
+    # apply_data 需要根据 apply_user_id 去users表里查一下数据，获取name，需要根据 sample_id 去 samples表里查一下数据，获取 name 和 phone
+    for item in apply_data:
+        # 查询用户信息
+        user = db.query(User).filter(User.user_id == item.get('apply_user_id')).first()
+        item['apply_user_name'] = user.name if user else None
+        # 查询样本信息
+        sample = db.query(Sample).filter(Sample.sample_id == item.get('sample_id')).first()
+        item['sample_name'] = sample.name if sample else None
+        item['sample_phone'] = sample.phone if sample else None
     total = db.query(Apply).count()
     return JSONResponse(
         content={"message": "success", "data": {"list": apply_data, "total": total}},
