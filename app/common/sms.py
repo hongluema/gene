@@ -52,7 +52,7 @@ class SMSService:
         # 创建短信发送请求
         send_sms_request = dysmsapi_20170525_models.SendSmsRequest(
             phone_numbers=phone_number,
-            sign_name='杭州翱锐基因科技',  # 这里需要替换为你在阿里云配置的短信签名
+            sign_name='杭州翱锐医学检验实验室',  # 这里需要替换为你在阿里云配置的短信签名
             template_code=settings.SMS_TEMPLATE_CODE,
             template_param=f'{{"code":"{code}"}}'
         )
