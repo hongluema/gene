@@ -2,12 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
+from datetime import datetime, timedelta
 
 from api.deps import get_db
-from models import User
+from models import User, SmsCode
 from schemas.user import UserCreate, UserRead, UserUpdate
 from crud import user as crud_user
 from common.sms import sms_service
+from schemas.sms_code import SendSmsCodeRequest, VerifySmsCodeRequest
 
 from common.decorators import log_exceptions
 
@@ -48,7 +50,7 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/send-sms-code")
 @log_exceptions
-def send_sms_code(phone: str):
+def send_sms_code(payload: SendSmsCodeRequest, db: Session = Depends(get_db)):
     """
     发送短信验证码接口
     
@@ -58,19 +60,53 @@ def send_sms_code(phone: str):
     Returns:
         JSON响应结果
     """
-    if not phone:
+    if not payload.phone:
         raise HTTPException(status_code=400, detail="手机号不能为空")
     
-    # 发送验证码
-    success = sms_service.send_verification_code(phone)
+    code = sms_service.generate_verification_code(6)
+    expires_at = datetime.now() + timedelta(minutes=5)
+
+    db_code = SmsCode(phone=payload.phone, code=code, expires_at=expires_at)
+    db.add(db_code)
+    db.flush()
+
+    # 发送验证码（使用我们生成并入库的 code）
+    success = sms_service.send_verification_code(payload.phone, code=code)
     
     if success:
+        db.commit()
         return JSONResponse(
             content={"message": "验证码发送成功", "data": {}},
             status_code=200
         )
     else:
+        db.rollback()
         raise HTTPException(status_code=500, detail="验证码发送失败")
+
+
+@router.post("/verify-sms-code", response_model=UserRead)
+@log_exceptions
+def verify_sms_code(payload: VerifySmsCodeRequest, db: Session = Depends(get_db)):
+    now = datetime.now()
+    record = (
+        db.query(SmsCode)
+        .filter(
+            SmsCode.phone == payload.phone,
+            SmsCode.code == payload.code,
+            SmsCode.expires_at > now,
+        )
+        .order_by(SmsCode.created_at.desc())
+        .first()
+    )
+    if not record:
+        raise HTTPException(status_code=400, detail="验证码错误或已过期")
+
+    # user = db.query(User).filter(User.phone == payload.phone).first()
+    # if not user:
+    #     user = crud_user.create_user(db, user=UserCreate(phone=payload.phone))
+
+    # user_data = UserRead.model_validate(user).model_dump(mode="json")
+    return JSONResponse(content={"message": "登录成功", "data": True}, status_code=200)
 
 
 @router.get("/info", response_model=UserRead)
