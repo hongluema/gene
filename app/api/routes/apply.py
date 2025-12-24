@@ -33,6 +33,7 @@ def list_applies(
         sample = db.query(Sample).filter(Sample.sample_id == item.get('sample_id')).first()
         item['sample_name'] = sample.name if sample else None
         item['sample_phone'] = sample.phone if sample else None
+        item['sample_code'] = sample.code if sample else None
     total = db.query(Apply).count()
     return JSONResponse(
         content={"message": "success", "data": {"list": apply_data, "total": total}},
