@@ -241,6 +241,8 @@ def _get_organizations_data(db: Session):
     organizations = []
     for row in rows:
         organization_dict = dict(row)
+        if 'id' in organization_dict and organization_dict['id'] is not None:
+            organization_dict['id'] = str(organization_dict['id'])
         organizations.append(organization_dict)
     return _serialize_datetime(organizations)
 
