@@ -9,7 +9,7 @@ from models.apply import Apply
 from schemas.sample import SampleCreate, SampleRead, SampleUpdate
 from crud import sample as crud_sample
 from common.decorators import log_exceptions
-from api.routes.remote import _get_projects_data
+from api.routes.remote import _get_projects_data, _get_organizations_data
 
 
 router = APIRouter()
@@ -50,6 +50,9 @@ def _enrich_samples_with_apply_status(samples, db: Session, filter_approved: boo
 def _enrich_samples_with_program_name(samples, db_lims: Session) -> list[Sample]:
     """为 samples 列表中的每个 sample 添加 program_name 字段"""
     programEnums = _get_projects_data(db_lims)
+    organizations = _get_organizations_data(db_lims)
+    organization_map = {item.get('id'): item.get('name') for item in organizations if item.get('id') is not None}
+    print('>>>>organization_map', organization_map)
     # 创建 program_id 到 name 的映射字典
     program_map = {item.get('id'): item.get('name') for item in programEnums if item.get('id') is not None}
     print('>>>>program_map', program_map)
@@ -62,6 +65,10 @@ def _enrich_samples_with_program_name(samples, db_lims: Session) -> list[Sample]
             print('>>>>sample program_id:', sample.program_id, program_map.get(str(sample.program_id)))
             program_name = program_map.get(str(sample.program_id))
             sample.program_name = program_name
+            print('>>>>sample org_id:', sample.org_id, organization_map.get(sample.org_id))
+            organization_name = organization_map.get(str(sample.org_id))
+            sample.organization_name = organization_name
+            print('>>>>sample organization_name:', sample.organization_name)
         except Exception as e:
             print(f'>>>>error processing sample: {e}')
             continue

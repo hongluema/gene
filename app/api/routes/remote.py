@@ -148,24 +148,6 @@ async def get_remote_token():
     return {"success": True, "token": token, "code": 200}
 
 
-async def _fetch_projects() -> dict:
-    async def _do_request():
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            headers = {
-                "accept": "application/json",
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {REMOTE_TOKEN}"
-            }
-            payload = {
-                "pagesize": None,
-                "pagenumber": 1,
-                "query": {}
-            }
-            resp = await client.post(f"{BASE_API}/api/p/list", headers=headers, json=payload)
-            resp.raise_for_status()
-            return resp.json()
-    return await _make_request_with_retry(_do_request)
-
 async def _fetch_pdf_list(order_id: int | str) -> list[dict]:
     async def _do_request():
         async with httpx.AsyncClient(timeout=20.0) as client:
@@ -183,20 +165,6 @@ async def _fetch_pdf_list(order_id: int | str) -> list[dict]:
             content = data.get('content')
             return content if isinstance(content, list) else []
     return await _make_request_with_retry(_do_request)
-
-async def _download_pdf_file(pk: int | str) -> httpx.Response:
-    async def _do_request():
-        async with httpx.AsyncClient(timeout=None, follow_redirects=True) as client:
-            headers = {
-                "accept": "application/pdf,application/octet-stream,*/*",
-                "Authorization": f"Bearer {REMOTE_TOKEN}",
-            }
-            url = f"{BASE_API}/api/pdf/download/wx?pk={pk}"
-            # Stream the response to avoid buffering and preserve binary integrity
-            resp = await client.post(url, headers=headers)
-            return resp
-    return await _make_request_with_retry(_do_request)
-
 
 async def _download_binary_stream(pk: int | str):
     """下载二进制数据流（PDF）并流式返回"""
