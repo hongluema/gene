@@ -9,7 +9,7 @@ class SampleBase(BaseModel):
     code: StrictStr
     name: StrictStr
     type: Literal["fullBlood"]
-    process: Literal["progressing", "progressed"]
+    process: Literal["waiting", "progressing", "progressed"]
     user_id: StrictStr
     phone: StrictStr | None = None
     id_number: StrictStr | None = None
@@ -39,7 +39,7 @@ class SampleUpdate(BaseModel):
     code: StrictStr | None = None
     name: StrictStr | None = None
     type: Literal["fullBlood"] | None = None
-    process: Literal["progressing", "progressed"] | None = None
+    process: Literal["waiting", "progressing", "progressed"] | None = None
     user_id: StrictStr | None = None
     phone: StrictStr | None = None
     id_number: StrictStr | None = None
