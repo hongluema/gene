@@ -266,6 +266,15 @@ def _get_projects_data(db: Session):
     # 递归处理 datetime 对象
     return _serialize_datetime(projects)
 
+def _get_organizations_data(db: Session):
+    sql = text("select * from organization where open_to_wxapp = 1")
+    result = db.execute(sql)
+    rows = result.mappings().all()
+    organizations = []
+    for row in rows:
+        organization_dict = dict(row)
+        organizations.append(organization_dict)
+    return _serialize_datetime(organizations)
 
 # get请求获取projects，api是 /api/p/list
 @router.get("/projects")
@@ -277,13 +286,16 @@ async def get_projects(db: Session = Depends(get_db_lims)):
         content={"message": "success", "data": projects},
         status_code=200,
     )
-    # projects = await _fetch_projects()
-    # data = projects.get('content').get('rows');
-    # print('>>>>projects', );
-    # return JSONResponse(
-    #     content={"message": "success", "data": {"list": data, "total": 100}},
-    #     status_code=200,
-    # )
+
+@router.get("/organizations")
+@log_exceptions
+async def get_organizations(db: Session = Depends(get_db_lims)):
+    organizations = _get_organizations_data(db)
+    print('>>>>organizations', organizations)
+    return JSONResponse(
+        content={"message": "success", "data": organizations},
+        status_code=200,
+    )
 
 
 async def _post_remote_api(payload: dict) -> dict:
