@@ -79,27 +79,73 @@ def _enrich_samples_with_program_name(samples, db_lims: Session) -> list[Sample]
 @log_exceptions
 def list_samples(
     user_id: str | None = Query(None, description="用户ID"),
+    sample_id: str | None = Query(None, description="样品ID"),
+    name: str | None = Query(None, description="检测人姓名"),
+    id_number: str | None = Query(None, description="身份证号"),
+    phone: str | None = Query(None, description="手机号"),
+    program_name: str | None = Query(None, description="项目名称"),
+    status: str | None = Query(None, description="样本状态(waiting/progressing/progressed)"),
+    start_time: str | None = Query(None, description="开始时间(YYYY-MM-DD)"),
+    end_time: str | None = Query(None, description="结束时间(YYYY-MM-DD)"),
     db: Session = Depends(get_db),
     db_lims: Session = Depends(get_db_lims),
     begin: int = Query(0, ge=0),
     length: int = Query(20, ge=1, le=100),
 ):
+    from datetime import datetime
+
     # 统一使用 ORM 方式查询，确保自动应用 usable=1 条件
-    query = db.query(Sample).order_by(Sample.created_at.desc())
-    # if user_id:
-    #     query = query.filter(Sample.user_id == user_id)
+    query = db.query(Sample)
+    count_query = db.query(Sample)
+
+    # 筛选条件
+    if sample_id:
+        query = query.filter(Sample.sample_id.like(f"%{sample_id}%"))
+        count_query = count_query.filter(Sample.sample_id.like(f"%{sample_id}%"))
+    if name:
+        query = query.filter(Sample.name.like(f"%{name}%"))
+        count_query = count_query.filter(Sample.name.like(f"%{name}%"))
+    if id_number:
+        query = query.filter(Sample.id_number.like(f"%{id_number}%"))
+        count_query = count_query.filter(Sample.id_number.like(f"%{id_number}%"))
+    if phone:
+        query = query.filter(Sample.phone.like(f"%{phone}%"))
+        count_query = count_query.filter(Sample.phone.like(f"%{phone}%"))
+    if status:
+        query = query.filter(Sample.process == status)
+        count_query = count_query.filter(Sample.process == status)
+    if start_time:
+        start_dt = datetime.strptime(start_time, "%Y-%m-%d")
+        query = query.filter(Sample.created_at >= start_dt)
+        count_query = count_query.filter(Sample.created_at >= start_dt)
+    if end_time:
+        end_dt = datetime.strptime(end_time, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
+        query = query.filter(Sample.created_at <= end_dt)
+        count_query = count_query.filter(Sample.created_at <= end_dt)
+
+    # 如果有 program_name 筛选，先获取对应的 program_id
+    if program_name:
+        programEnums = _get_projects_data(db_lims)
+        matching_program_ids = [str(item.get('id')) for item in programEnums if item.get('name') and program_name in item.get('name')]
+        if matching_program_ids:
+            query = query.filter(Sample.program_id.in_(matching_program_ids))
+            count_query = count_query.filter(Sample.program_id.in_(matching_program_ids))
+        else:
+            # 没有匹配的项目，返回空结果
+            return JSONResponse(content={"message": "success", "data": {"list": [], "total": 0}}, status_code=200)
+
+    query = query.order_by(Sample.created_at.desc())
     samples = query.offset(begin).limit(length).all()
 
     # 添加 apply_status 属性（不过滤）
     samples = _enrich_samples_with_apply_status(samples, db, filter_approved=False)
 
-    total = db.query(Sample).count()
-    sample_data =  _enrich_samples_with_program_name(samples, db_lims);
-    print('>>>>sample_data', sample_data);
+    total = count_query.count()
+    sample_data = _enrich_samples_with_program_name(samples, db_lims)
+    print('>>>>sample_data', sample_data)
     # 将sample_data 转为 list
     sample_data = [SampleRead.model_validate(sample).model_dump(mode='json') for sample in sample_data]
     return JSONResponse(content={"message": "success", "data": {"list": sample_data, "total": total}}, status_code=200)
-    # return {"list": samples, "total": total}
 
 
 @router.post("/", response_model=SampleRead, status_code=status.HTTP_201_CREATED)
