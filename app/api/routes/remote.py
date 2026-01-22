@@ -660,6 +660,9 @@ async def get_mongo_info(mongoid: str = Query(..., description="MongoDB document
         # mongoid非空时，执行远程请求
         payload = {"mongoid": mongoid}
         result = await _get_mongo_mongoid(payload)
+        
+        # 如果result属性有值就取result，否则取z_cn
+        result['result'] = result.get('result') if result.get('result') else result.get('z_cn')
         return JSONResponse(
             content={
                 "message": "success",
