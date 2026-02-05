@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     WX_SECRET: str | None = None
     WX_JSCODE2SESSION_URL: str = "https://api.weixin.qq.com/sns/jscode2session"
     WX_GRANT_TYPE: str = "authorization_code"
+    WX_GET_PHONE_URL: str = "https://api.weixin.qq.com/wxa/business/getuserphonenumber"
+    WX_ACCESS_TOKEN_URL: str = "https://api.weixin.qq.com/cgi-bin/token"
 
     # Aliyun OCR
     ALIYUN_ACCESS_KEY_ID: str | None = None
